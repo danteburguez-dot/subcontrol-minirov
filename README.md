@@ -3,7 +3,7 @@
 Estación de control en PC para un mini-submarino teledirigido por cable de 20 m:
 
 - **6 motores** sellados (2 frontales + 2 poperos + 2 verticales)
-- **5 cámaras** (punta, arriba, abajo, izquierda, derecha) — **3 con giro PTZ 360°** para vigilar el área
+- **5 cámaras** (punta, arriba, abajo, izquierda, derecha) — **3 domos PTZ 360°** con luz propia para vigilar en la oscuridad + **sensor térmico** en el domo superior
 - Vista tipo videollamada: cámara principal + miniaturas (clic para cambiar)
 - **4 luces LED de 10 W** (cada 90°) controladas por parejas
 - **Arpoón** con gimbal de autoapuntado, disparo a potencia plena hasta 2 m,
@@ -62,10 +62,13 @@ python -m PyInstaller --onefile --noconsole --clean --name SubControl ^
 SubControl/
 ├── subcontrol.py            # Aplicación de control (fuente principal)
 ├── companero_ptz.py         # Script para la Raspberry Pi: servos PTZ 360°
+├── companero_carga.py       # Script para la Pi: indicador de carga con las luces
 ├── requirements.txt         # Dependencias
 ├── build.bat                # Compila el .exe
 ├── MANUAL_DE_CONTROL.md     # 📖 Manual de uso completo
-├── COMPONENTES.md           # 🔩 Lista de materiales con precios (~990 USD)
+├── MONTAJE.md               # 🔧 Manual de construcción fase por fase
+├── COMPONENTES.md           # 🔩 Lista de materiales con precios (~1.280 USD)
+├── CARRITO_ALIEXPRESS.md    # 🛒 Carrito de compra con búsquedas y precios USD
 └── modelo3d/
     ├── modelo3d.scad        # Modelo paramétrico (OpenSCAD)
     ├── generar_stl.py       # Generador del modelo 3D (trimesh)

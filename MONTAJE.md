@@ -78,6 +78,7 @@ ninguna fuga, giro libre.
 | INA219 batería B | **0x45** | puente A1+A0 |
 | BNO055 (IMU/golpes) | 0x28 | |
 | MS5837 (presión) | 0x76 | |
+| MLX90640 (térmico, domo superior) | 0x33 | solo como módulo suelto (la placa GY trae otros) |
 
 ### Tabla de salidas (PCA9685 #1 = canales RC 1–14)
 
@@ -145,15 +146,22 @@ canales 8–9 (pares) vía los MOSFET/relés.
 
 ---
 
-## FASE 7 — Las 5 cámaras y PTZ (día 8)
+## FASE 7 — Las 5 cámaras ELP y los 3 domos PTZ (día 8)
 
-1. **CAM1 Punta:** detrás del domo, orientada al frente.
-2. **CAM3 Abajo:** bajo el domo inclinada 25° hacia abajo (mira la pinza).
-3. **CAM2/4/5 (PTZ):** en sus soportes con servo de 360°:
-   - CAM2 en el techo del casco (servo PCA9685 #2 ch0)
-   - CAM4 a babor y CAM5 a estribor (ch1 y ch2)
-4. Sella cada soporte con O-ring + grasa.
-5. Prueba en la app (modo demo ya lo muestra): clic en miniatura → `,`/`.` para girar.
+1. **CAM1 Punta:** módulo **ELP USBFHD01M (Sony IMX291, lente 2,1 mm = 170°)**
+   detrás del domo frontal, orientado al frente. Cable USB al hub de la Pi.
+2. **CAM3 Abajo:** mismo módulo ELP, bajo el domo, inclinada 25° hacia abajo
+   (mira la pinza y el fondo).
+3. **CAM2/4/5 — los 3 domos PTZ (arriba, izquierda, derecha):**
+   - En cada soporte: **servo de 360°** (PCA9685 #2: ch0 = arriba, ch1 = izq, ch2 = der)
+   - Módulo **ELP mini** dentro de la **cúpula acrílica** (impermeabilizada con O-ring)
+   - **Anillo de 6 LEDs blancos** alrededor de la cúpula → cable 22 AwG al
+     MOSFET del **canal 15** → luz propia para oscuridad (tecla `3` en la app)
+   - **CAM2 lleva además el módulo térmico MLX90640** (I2C 0x33) fijado junto
+     a la cúpula: visión térmica **en superficie** (barcos/personas de noche)
+     y diagnóstico de motores calientes en el taller
+4. Sella cada cúpula y soporte con O-ring + grasa de silicona.
+5. Prueba en la app: clic en miniatura → `,`/`.` para girar; `3` para las luces.
 
 ---
 
