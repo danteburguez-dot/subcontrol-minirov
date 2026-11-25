@@ -126,9 +126,6 @@ for (i = [0:5]) {
         translate([78 + 17 * cos(i * 60), s * 84, 17 * sin(i * 60)])
             rotate([90, 0, 0]) cylinder(r = 4, h = 9, center = true);     // LEDs CAM4/CAM5
 }
-// Módulo térmico MLX90640 (domo superior)
-color("dimgray") translate([95, 0, 56]) cube([30, 22, 12], center = true);
-color("silver") translate([95, 0, 63]) cylinder(r = 8, h = 6, center = true);
 color("dimgray") {
     translate([65, 0, 56]) cylinder(r = 18, h = 22, center = true);       // servo PTZ
     translate([78, 62, 0]) cube([26, 26, 24], center = true);             // servo PTZ izq

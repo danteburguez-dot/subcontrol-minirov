@@ -38,14 +38,13 @@ más barata con buen vendedor (>95% valoración) y añade al carrito. Al final, 
 
 | Cant | Buscar | Precio | Subtotal |
 |---|---|---|---|
-| 1 | `MLX90640 thermal camera module` (domo superior — térmica de superficie) | $50 | $50 |
 | 5 | **`ELP USBFHD01M IMX291 2.1mm`** — tienda oficial **Shenzhen Ailipu Technology** (USB 2.0, lente gran angular 170°; NO comprar en eBay donde cuesta $66) — CAM1 punta, CAM3 abajo y los 3 domos PTZ | $17 | $85 |
 | 3 | `acrylic dome cover 50mm` (cúpulas PTZ) | $3 | $9 |
 | 3 | `LED ring light 12V white` (anillo domos) | $4 | $12 |
 | 3 | `servo 360 continuous rotation MG996R` | $6 | $18 |
 | 3 | `mosfet module 12V` (luces domos + pares) | $2 | $6 |
 
-**Subtotal cámaras: ≈ $180**
+**Subtotal cámaras: ≈ $130**
 
 ## Luces principales
 
@@ -109,7 +108,7 @@ más barata con buen vendedor (>95% valoración) y añade al carrito. Al final, 
 | Arpoón + pinza | $45.50 |
 | Energía (carga + protección) | $148 |
 | Casco + cableado | $88 |
-| **CARRITO ALIEXPRESS TOTAL** | **≈ $787** (+ envío combinado ~$15–30) |
+| **CARRITO ALIEXPRESS TOTAL** | **≈ $737** (+ envío combinado ~$15–30) |
 
 ### Fuera de AliExpress (compra aparte)
 
@@ -118,7 +117,7 @@ más barata con buen vendedor (>95% valoración) y añade al carrito. Al final, 
 | **DEWALT DCB205-2C** (2× batería 20V MAX 5Ah + cargador) | Home Depot / Lowe's / Amazon | $149 |
 | Tubo PVC 25 mm + codos + herrajes inox + espuma PU | ferretería local | ~$35 |
 | Herrajes/diversos (tornillería A4, tuercas, abrazaderas) | ferretería local | ~$15 |
-| **TOTAL REAL DEL PROYECTO** | | **≈ $987** |
+| **TOTAL REAL DEL PROYECTO** | | **≈ $937** |
 
 ### Notas del carrito
 

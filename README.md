@@ -3,7 +3,7 @@
 Estación de control en PC para un mini-submarino teledirigido por cable de 20 m:
 
 - **6 motores** sellados (2 frontales + 2 poperos + 2 verticales)
-- **5 cámaras** (punta, arriba, abajo, izquierda, derecha) — **3 domos PTZ 360°** con luz propia para vigilar en la oscuridad + **sensor térmico** en el domo superior
+- **5 cámaras** (punta, arriba, abajo, izquierda, derecha) — **3 domos PTZ 360°** con luz propia (anillo LED) para vigilar en la oscuridad
 - Vista tipo videollamada: cámara principal + miniaturas (clic para cambiar)
 - **4 luces LED de 10 W** (cada 90°) controladas por parejas
 - **Arpoón** con gimbal de autoapuntado, disparo a potencia plena hasta 2 m,

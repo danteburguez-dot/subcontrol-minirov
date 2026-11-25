@@ -156,8 +156,6 @@ partes.append(esfera(20, [65, 0, 72], CRISTAL))                            # cú
 for k in range(6):                                                         # anillo 6 LEDs CAM2
     a = math.radians(k * 60)
     partes.append(cil(4, 9, [65 + 17 * math.cos(a), 17 * math.sin(a), 60], BLANCO, eje="z"))
-partes.append(caja([30, 22, 12], [95, 0, 56], GRIS_OSC))                   # módulo térmico MLX90640
-partes.append(cil(8, 6, [95, 0, 63], GRIS_OSC, eje="z"))                   # ventana del térmico
 partes.append(cil(15, 26, [40, 0, -74], PLATA, eje="z",
                   rot_extra=(180, [0, 0, 1])))                             # CAM3 abajo (fija)
 for yy in (62, -62):                                                       # servos PTZ laterales

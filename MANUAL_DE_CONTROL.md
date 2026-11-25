@@ -67,7 +67,7 @@ pinza reforzada · sensor de golpes · modelo 3D en vivo.
 | # | Posición | Tipo |
 |---|---|---|
 | CAM 1 | **Punta** (en el domo) | Fija — cámara del arpoón y del autoapuntado |
-| CAM 2 | **Arriba** | 🔵 Domo PTZ 360° con luz propia + **sensor térmico** (ver barcos/personas en superficie, de noche) |
+| CAM 2 | **Arriba** | 🔵 Domo PTZ 360° con luz propia (tecla `3`) |
 | CAM 3 | **Abajo** | Fija — mira la pinza y el fondo (auto-gancho) |
 | CAM 4 | **Izquierda** | 🔵 PTZ 360° — vigilancia |
 | CAM 5 | **Derecha** | 🔵 PTZ 360° — vigilancia |

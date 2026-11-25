@@ -100,10 +100,9 @@ Diseño autónomo: conectas cualquier batería (llena, a medio usar, incluso des
 | 26 | CAM2 Arriba: **domo PTZ** = módulo **ELP mini** + cúpula acrílica + anillo 6 LEDs blancos + servo 360° | vigilancia con luz propia para oscuridad | 15 + 10 |
 | 27 | CAM4 Izquierda: **domo PTZ** (igual) | vigilancia con luz propia | 15 + 10 |
 | 28 | CAM5 Derecha: **domo PTZ** (igual) | vigilancia con luz propia | 15 + 10 |
-| 29 | **Módulo térmico MLX90640** en el domo superior | visión térmica EN SUPERFICIE (barcos/personas de noche) + diagnóstico de motores calientes en el taller | 50 |
-| 30 | 3× soportes PTZ impresos | estancos con O-ring | 9 |
+| 29 | 3× soportes PTZ impresos | estancos con O-ring | 9 |
 
-**Subtotal cámaras: ≈ 174**
+**Subtotal cámaras: ≈ 124**
 
 ## 7. Luces (4 × 10 W a 90°)
 
@@ -167,11 +166,11 @@ Diseño autónomo: conectas cualquier batería (llena, a medio usar, incluso des
 | Arpoón + hilo + gimbal | ~78 |
 | Pinza reforzada | ~24 |
 | Tether + consola | ~45 |
-| **TOTAL** | **≈ 1.280 USD** (≈ 1.130 si ya tienes las baterías DeWalt) |
+| **TOTAL** | **≈ 1.230 USD** (≈ 1.080 si ya tienes las baterías DeWalt) |
 
 ### Versiones ajustadas
 - **Económica (~700):** 4 motores en vez de 6, 3 cámaras (1 PTZ), luces 2 × 10 W, 1 sola batería.
-- **Recomendada (~1.280):** todo lo de esta lista (la de este proyecto).
+- **Recomendada (~1.230):** todo lo de esta lista (la de este proyecto).
 - **Pro (~1.300):** Pi 5, cámaras de mayor luminosidad, lastre activo, 2° batería extra.
 
 ### ⚡ Variante con baterías de 20 V (5S)

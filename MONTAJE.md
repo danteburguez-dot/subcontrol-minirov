@@ -78,7 +78,6 @@ ninguna fuga, giro libre.
 | INA219 batería B | **0x45** | puente A1+A0 |
 | BNO055 (IMU/golpes) | 0x28 | |
 | MS5837 (presión) | 0x76 | |
-| MLX90640 (térmico, domo superior) | 0x33 | solo como módulo suelto (la placa GY trae otros) |
 
 ### Tabla de salidas (PCA9685 #1 = canales RC 1–14)
 
@@ -157,9 +156,6 @@ canales 8–9 (pares) vía los MOSFET/relés.
    - Módulo **ELP mini** dentro de la **cúpula acrílica** (impermeabilizada con O-ring)
    - **Anillo de 6 LEDs blancos** alrededor de la cúpula → cable 22 AwG al
      MOSFET del **canal 15** → luz propia para oscuridad (tecla `3` en la app)
-   - **CAM2 lleva además el módulo térmico MLX90640** (I2C 0x33) fijado junto
-     a la cúpula: visión térmica **en superficie** (barcos/personas de noche)
-     y diagnóstico de motores calientes en el taller
 4. Sella cada cúpula y soporte con O-ring + grasa de silicona.
 5. Prueba en la app: clic en miniatura → `,`/`.` para girar; `3` para las luces.
 
