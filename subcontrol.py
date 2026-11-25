@@ -1168,12 +1168,13 @@ class App(tk.Tk):
         self.log(f"Vigilancia automática: {'ON — la cámara PTZ gira sola' if self.ptz_auto else 'OFF'}")
 
     # ------------------------------------------- modelo 3D en vivo
-    PROPS = [((235, 105, 0), "x", 1), ((235, -105, 0), "x", -1),
-             ((-235, 105, 0), "x", -1), ((-235, -105, 0), "x", 1),
-             ((150, 75, 118), "z", 1), ((-150, -75, 118), "z", -1)]
+    PROPS = [((150, 56, -38), "x", 1), ((150, -56, -38), "x", -1),
+             ((-150, 56, -38), "x", -1), ((-150, -56, -38), "x", 1),
+             ((150, 0, 96), "z", 1), ((-150, 0, 96), "z", -1),
+             ((-266, 0, 0), "x", 1)]
 
     def _geo_rov(self):
-        """Geometría exterior del ROV (mm, X adelante) — silueta limpia."""
+        """Silueta de submarino real (loft de anillos) + todos los mecanismos."""
         faces = []
 
         def caja(p1, p2, color):
@@ -1191,67 +1192,75 @@ class App(tk.Tk):
             faces.append((q, color))
             faces.append((q[::-1].copy(), color))
 
-        # ---- casco: cilindro de 24 lados + morro y cola cónicos
-        N, R = 24, 50
+        # ---- casco tipo submarino: loft de anillos (morro y cola redondeados)
+        N = 24
         angs = np.linspace(0, 2 * np.pi, N, endpoint=False)
-        r_a = np.stack([np.full(N, -215.0), R * np.sin(angs), R * np.cos(angs)], axis=1)
-        r_b = np.stack([np.full(N, 215.0), R * np.sin(angs), R * np.cos(angs)], axis=1)
-        r_n = np.stack([np.full(N, 250.0), 28 * np.sin(angs), 28 * np.cos(angs)], axis=1)
-        r_s = np.stack([np.full(N, -248.0), 30 * np.sin(angs), 30 * np.cos(angs)], axis=1)
-        for i in range(N):
-            j = (i + 1) % N
-            zmed = float((R * math.cos(angs[i]) + R * math.cos(angs[j])) / 2.0)
-            col = [96, 196, 208] if zmed >= 0 else [58, 132, 148]
-            faces.append((np.array([r_a[i], r_a[j], r_b[j], r_b[i]]), col))
-            faces.append((np.array([r_s[i], r_s[j], r_a[j], r_a[i]]), [70, 150, 164]))
-            faces.append((np.array([r_b[i], r_b[j], r_n[j], r_n[i]]), [120, 205, 225]))
-        faces.append((r_n, [170, 220, 250]))    # punta del morro (domo)
-        faces.append((r_s, [62, 132, 146]))     # tapa de cola
+        perfil = [(-262, 4), (-252, 22), (-230, 38), (-180, 47), (-80, 50),
+                  (40, 50), (140, 46), (200, 38), (240, 24), (262, 6)]
+        anillos = [np.stack([np.full(N, float(xr)), rr * np.sin(angs),
+                             rr * np.cos(angs)], axis=1) for xr, rr in perfil]
+        for k in range(len(anillos) - 1):
+            A, B = anillos[k], anillos[k + 1]
+            for i in range(N):
+                j = (i + 1) % N
+                zmed = float((A[i][2] + A[j][2] + B[i][2] + B[j][2]) / 4.0)
+                col = [72, 82, 92] if zmed >= 0 else [142, 58, 52]
+                faces.append((np.array([A[i], A[j], B[j], B[i]]), col))
+        faces.append((anillos[0], [60, 68, 76]))    # cola (hélice delante)
+        faces.append((anillos[-1], [96, 104, 112]))  # punta del morro
 
-        # ---- foam superior (flotabilidad)
-        caja((-115, -36, 96), (115, 36, 124), AMARILLO)
-        # ---- bahía de baterías DeWalt (popa, abajo) + hatch
-        caja((-175, -32, -90), (-20, 32, -40), NARANJA)
-        caja((-185, -38, -40), (-10, 38, -32), GRIS_OSC)
-        # ---- gimbal del arpoón (bajo el morro)
-        caja((10, -24, -122), (92, 24, -74), GRIS_OSC)
-        # ---- arpoón: cañón delgado + punta
-        caja((92, -7, -104), (555, 7, -94), PLATA)
-        caja((555, -5, -101), (620, 5, -97), ROJO)
-        # ---- 6 motores: pods con soporte hacia el casco
-        for xx, yy in ((235, 105), (235, -105), (-235, 105), (-235, -105)):
+        # ---- vela (torre de mando) + periscopio, sobre la cubierta
+        caja((-40, -16, 46), (60, 16, 100), [92, 102, 112])
+        caja((0, -4, 100), (18, 4, 132), [92, 102, 112])
+        caja((-14, -22, 118), (26, 22, 124), [102, 112, 122])
+
+        # ---- timones en cruz en la cola (como la foto)
+        placa([(-262, 0, -56), (-218, 0, -56), (-218, 0, 58), (-262, 0, 58)],
+              [82, 92, 102])
+        placa([(-262, -54, -8), (-218, -54, -8), (-218, 54, 8), (-262, 54, 8)],
+              [92, 102, 112])
+
+        # ---- mecanismos: 4 pods horizontales bajo la panza
+        for xx, yy in ((150, 56), (150, -56), (-150, 56), (-150, -56)):
             sy = 1 if yy > 0 else -1
-            caja((xx - 12, sy * 48, -12), (xx + 12, yy, 12), GRIS)      # soporte
-            caja((xx - 26, yy - 20, -20), (xx + 26, yy + 20, 20), GRIS_OSC)
-        for xx, yy in ((150, 75), (-150, -75)):
-            caja((xx - 12, yy - 12, 50), (xx + 12, yy + 12, 94), GRIS)  # mástil
-            caja((xx - 18, yy - 18, 94), (xx + 18, yy + 18, 146), GRIS_OSC)
-        # ---- aletas: cuchillas con silueta real
-        placa([(-250, 0, 90), (-132, 0, 90), (-146, 0, 166), (-236, 0, 166)], ROJO)
-        placa([(-258, 82, -36), (-172, 82, -36), (-168, 82, 38), (-254, 82, 38)], ROJO)
-        placa([(-258, -82, -36), (-172, -82, -36), (-168, -82, 38), (-254, -82, 38)], ROJO)
-        placa([(-230, 0, -100), (-142, 0, -100), (-152, 0, -142), (-224, 0, -142)], VERDE3D)
-        # ---- 4 luces 10 W (frente, cruz de 90°)
-        for p1, p2 in (((236, -18, 58), (252, 18, 90)),
-                       ((236, -18, -90), (252, 18, -58)),
-                       ((236, 76, -18), (252, 114, 18)),
-                       ((236, -114, -18), (252, -76, 18))):
+            caja((xx - 22, sy * 28, -46), (xx + 22, yy, -30), GRIS_OSC)
+        # ---- 2 verticales como torretas en cubierta
+        for xx in (150, -150):
+            caja((xx - 22, -16, 46), (xx + 22, 16, 96), GRIS_OSC)
+
+        # ---- arpoón bajo el morro: gimbal + cañón + punta
+        caja((0, -20, -74), (70, 20, -48), GRIS_OSC)
+        caja((70, -6, -66), (520, 6, -56), PLATA)
+        caja((520, -4, -62), (580, 4, -60), ROJO)
+
+        # ---- pinza reforzada (bajo el morro, al lado del arpoón)
+        caja((110, -34, -86), (150, 34, -58), ACERO)
+        caja((150, -30, -78), (196, -18, -68), ACERO)
+        caja((150, 18, -78), (196, 30, -68), ACERO)
+
+        # ---- 4 luces 10 W alrededor del morro
+        for p1, p2 in (((252, -30, 12), (264, -10, 32)),
+                       ((252, -30, -32), (264, -10, -12)),
+                       ((252, 10, 32), (264, 30, 12)),
+                       ((252, 10, -32), (264, 30, -12))):
             caja(p1, p2, BLANCO)
-        # ---- cámaras: punta (en el morro), abajo y 3 domos PTZ con LED
-        caja((55, -12, 50), (95, 12, 62), GRIS_OSC)                # CAM2 base
-        caja((95, -12, 44), (107, 12, 68), CRISTAL2)               # cúpula CAM2
-        for dx, dz in ((-14, 12), (14, 12), (-14, -12), (14, -12)):  # LEDs CAM2
-            caja((75 + dx - 3, -4, 58 + dz - 3), (75 + dx + 3, 4, 58 + dz + 3), BLANCO)
-        caja((38, -12, -64), (86, 12, -52), GRIS_OSC)              # CAM3 abajo
+
+        # ---- cámaras: punta (morro), abajo, y 3 domos PTZ con LED
+        caja((236, -12, 34), (256, 12, 52), GRIS_OSC)              # CAM1 base
+        caja((248, -10, 40), (260, 10, 58), CRISTAL2)             # domo CAM1
+        caja((56, -12, -60), (84, 12, -48), GRIS_OSC)             # CAM3 abajo
+        caja((118, -12, 46), (142, 12, 64), GRIS_OSC)             # CAM2 base (cubierta)
+        caja((142, -10, 40), (154, 10, 62), CRISTAL2)             # cúpula CAM2
+        for dx in (-8, 0, 8):                                      # LEDs CAM2
+            caja((126 + dx - 3, -4, 46), (126 + dx + 3, 4, 52), BLANCO)
         for s in (1, -1):                                          # CAM4/CAM5
-            caja((70, s * 50, -12), (92, s * 62, 12), GRIS_OSC)
-            caja((92, s * 50, -13), (104, s * 62, 13), CRISTAL2)
-            for dz in (-8, 0, 8):                                  # 3 LEDs c/u
-                caja((100, s * 50, dz - 3), (106, s * 62, dz + 3), BLANCO)
-        # ---- pinza reforzada (frente-abajo)
-        caja((200, -38, -132), (246, 38, -102), ACERO)
-        caja((246, -34, -120), (298, -22, -110), ACERO)
-        caja((246, 22, -120), (298, 34, -110), ACERO)
+            caja((-8, s * 48, 6), (8, s * 60, 28), GRIS_OSC)
+            caja((6, s * 50, 8), (18, s * 60, 26), CRISTAL2)
+            for dz in (10, 16, 22):                                # LEDs c/u
+                caja((-6, s * 54, dz - 3), (0, s * 60, dz + 3), BLANCO)
+
+        # ---- hatch de baterías en cubierta (popa)
+        caja((-190, -24, 44), (-120, 24, 54), GRIS_OSC)
         return faces
 
     def _proyectar(self, pts):
@@ -1447,10 +1456,10 @@ class App(tk.Tk):
             cv.create_polygon(coords, fill="#%02x%02x%02x" % col,
                               outline="#0b0f14", width=1)
 
-        # cable (tether) saliendo por popa
-        t0 = self._proyectar(np.array([[-215.0, 0.0, -45.0]]))
-        t1 = self._proyectar(np.array([[-315.0, -16.0, -8.0]]))
-        t2 = self._proyectar(np.array([[-420.0, -24.0, 14.0]]))
+        # cable (tether) saliendo por la cola
+        t0 = self._proyectar(np.array([[-262.0, 0.0, 8.0]]))
+        t1 = self._proyectar(np.array([[-310.0, 8.0, 18.0]]))
+        t2 = self._proyectar(np.array([[-380.0, 14.0, 30.0]]))
         cv.create_line(cx + t0[0][0] * s, cz - t0[2][0] * s,
                        cx + t1[0][0] * s, cz - t1[2][0] * s,
                        cx + t2[0][0] * s, cz - t2[2][0] * s,
@@ -1476,7 +1485,7 @@ class App(tk.Tk):
                                fill="#f85149", width=2)
 
         # cámaras PTZ: flecha de vista que gira 360° en el modelo
-        campos_ptz = {1: (65, 0, 66), 3: (78, 61, 0), 4: (78, -61, 0)}
+        campos_ptz = {1: (132, 0, 66), 3: (0, 58, 18), 4: (0, -58, 18)}
         for i, ang_cam in self.ptz.items():
             if i not in campos_ptz:
                 continue
