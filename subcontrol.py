@@ -1573,6 +1573,11 @@ class App(tk.Tk):
 
         cv.create_text(10, 12, anchor="nw", text=f"8 motores · empuje {empuje * 100:.0f}%",
                        fill="#8b949e", font=("Consolas", 9))
+        cv.create_text(10, h - 10, anchor="sw",
+                       text=("Azul: hacia dónde miran las cámaras PTZ  ·  "
+                             "Amarillo: empuje de los pods giratorios  ·  "
+                             "Blanco punteado: cable"),
+                       fill="#8b949e", font=("Segoe UI", 7))
         if golpe_act:
             cv.create_text(w - 10, 12, anchor="ne",
                            text=f"💥 GOLPE {self.impacto['lado'].upper()} · {self.impacto['g']:.1f} g",
