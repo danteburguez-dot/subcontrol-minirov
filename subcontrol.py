@@ -1170,8 +1170,7 @@ class App(tk.Tk):
     # ------------------------------------------- modelo 3D en vivo
     PROPS = [((150, 56, -38), "x", 1), ((150, -56, -38), "x", -1),
              ((-150, 56, -38), "x", -1), ((-150, -56, -38), "x", 1),
-             ((150, 0, 96), "z", 1), ((-150, 0, 96), "z", -1),
-             ((-266, 0, 0), "x", 1)]
+             ((150, 0, 96), "z", 1), ((-150, 0, 96), "z", -1)]
 
     def _geo_rov(self):
         """Silueta de submarino real (loft de anillos) + todos los mecanismos."""
@@ -1206,19 +1205,8 @@ class App(tk.Tk):
                 zmed = float((A[i][2] + A[j][2] + B[i][2] + B[j][2]) / 4.0)
                 col = [72, 82, 92] if zmed >= 0 else [142, 58, 52]
                 faces.append((np.array([A[i], A[j], B[j], B[i]]), col))
-        faces.append((anillos[0], [60, 68, 76]))    # cola (hélice delante)
+        faces.append((anillos[0], [60, 68, 76]))    # cola
         faces.append((anillos[-1], [96, 104, 112]))  # punta del morro
-
-        # ---- vela (torre de mando) + periscopio, sobre la cubierta
-        caja((-40, -16, 46), (60, 16, 100), [92, 102, 112])
-        caja((0, -4, 100), (18, 4, 132), [92, 102, 112])
-        caja((-14, -22, 118), (26, 22, 124), [102, 112, 122])
-
-        # ---- timones en cruz en la cola (como la foto)
-        placa([(-262, 0, -56), (-218, 0, -56), (-218, 0, 58), (-262, 0, 58)],
-              [82, 92, 102])
-        placa([(-262, -54, -8), (-218, -54, -8), (-218, 54, 8), (-262, 54, 8)],
-              [92, 102, 112])
 
         # ---- mecanismos: 4 pods horizontales bajo la panza
         for xx, yy in ((150, 56), (150, -56), (-150, 56), (-150, -56)):
