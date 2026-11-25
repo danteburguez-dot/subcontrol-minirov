@@ -109,6 +109,7 @@ DEFAULT_CONFIG = {
         {"nombre": "Derecha",   "url": "rtsp://192.168.2.1:8554/cam5", "ptz": True},
     ],
     "ptz_puerto_udp": 14551,   # puerto en la Pi para mover las cámaras PTZ
+    "pod_puerto_udp": 14552,   # puerto para los 2 pods laterales giratorios
     "ptz_velocidad": 40,       # grados/seg en vigilancia automática
     "canal_luces_1": 8,   # servo/relé par superior
     "canal_luces_2": 9,   # servo/relé par inferior
@@ -677,6 +678,8 @@ class App(tk.Tk):
         self.ptz_sel = None         # cámara PTZ seleccionada
         self.ptz_auto = False       # vigilancia automática
         self._last_ptz = {}
+        self.pod_ang = 0.0          # ángulo de los pods laterales giratorios
+        self.pod_emp = 0.0          # empuje de los pods (0..1)
         try:
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         except Exception:
@@ -736,7 +739,8 @@ class App(tk.Tk):
         head.pack(fill="x")
         tk.Label(head, text="SUBCONTROL", bg=COL_PANEL, fg=COL_ACENTO,
                  font=("Segoe UI", 16, "bold")).pack(side="left", padx=14, pady=8)
-        tk.Label(head, text="Estación de superficie · mini-ROV 6 motores",
+        tk.Label(head, text="Estación de superficie · mini-ROV 8 motores "
+                            "(4 en popa + 2 verticales + 2 pods laterales)",
                  bg=COL_PANEL, fg=COL_TEXTO).pack(side="left", padx=4)
         self.dot = tk.Canvas(head, width=16, height=16, bg=COL_PANEL, highlightthickness=0)
         self.dot_id = self.dot.create_oval(2, 2, 14, 14, fill="#555", outline="")
@@ -1168,8 +1172,8 @@ class App(tk.Tk):
         self.log(f"Vigilancia automática: {'ON — la cámara PTZ gira sola' if self.ptz_auto else 'OFF'}")
 
     # ------------------------------------------- modelo 3D en vivo
-    PROPS = [((174, 56, -38), "x", 1), ((174, -56, -38), "x", -1),
-             ((-174, 56, -38), "x", -1), ((-174, -56, -38), "x", 1),
+    PROPS = [((-214, 42, -14), "x", 1), ((-214, -42, -14), "x", -1),
+             ((-214, 42, 16), "x", -1), ((-214, -42, 16), "x", 1),
              ((150, 0, 100), "z", 1), ((-150, 0, 100), "z", -1)]
 
     def _geo_rov(self):
@@ -1208,15 +1212,11 @@ class App(tk.Tk):
         faces.append((anillos[0], [60, 68, 76]))    # cola
         faces.append((anillos[-1], [96, 104, 112]))  # punta del morro
 
-        # ---- mecanismos: 4 pods horizontales bajo la panza (soporte+pod+tobera)
-        for xx, yy in ((150, 56), (150, -56), (-150, 56), (-150, -56)):
-            sy = 1 if yy > 0 else -1
-            caja((xx - 14, sy * 36, -44), (xx + 14, sy * 50, -34), GRIS)   # soporte
-            caja((xx - 22, sy * 28, -46), (xx + 22, yy, -30), GRIS_OSC)    # pod
-            if xx > 0:
-                caja((172, yy - 17, -17), (182, yy + 17, 17), GRIS)        # tobera
-            else:
-                caja((-182, yy - 17, -17), (-172, yy + 17, 17), GRIS)
+        # ---- mecanismos: 4 motores en popa (placa de popa + 2×2 pods)
+        caja((-172, -58, -30), (-152, 58, 30), GRIS)                     # placa de popa
+        for yy, zz in ((42, -14), (-42, -14), (42, 16), (-42, 16)):
+            caja((-196, yy - 16, zz - 14), (-174, yy + 16, zz + 14), GRIS_OSC)  # pod
+            caja((-212, yy - 17, zz - 15), (-198, yy + 17, zz + 15), GRIS)      # tobera
         # ---- 2 verticales como torretas en cubierta
         for xx in (150, -150):
             caja((xx - 22, -16, 46), (xx + 22, 16, 96), GRIS_OSC)
@@ -1251,6 +1251,12 @@ class App(tk.Tk):
             caja((6, s * 50, 8), (18, s * 60, 26), CRISTAL2)
             for dz in (10, 16, 22):                                # LEDs c/u
                 caja((-6, s * 54, dz - 3), (0, s * 60, dz + 3), BLANCO)
+
+        # ---- 2 pods laterales giratorios (pod entero sobre servo IP67)
+        for s in (1, -1):
+            caja((-24, s * 50, -22), (28, s * 62, -2), GRIS_OSC)        # pod giratorio
+            caja((28, s * 52, -16), (40, s * 62, -6), NARANJA)          # servo IP67
+            caja((36, s * 62, -14), (42, s * 70, -8), GRIS)             # eje/slip ring
 
         # ---- hatch de baterías en cubierta (popa)
         caja((-190, -24, 44), (-120, 24, 54), GRIS_OSC)
@@ -1516,7 +1522,21 @@ class App(tk.Tk):
                            cx + hx[0] * s + 3, cz - hz[0] * s + 3,
                            fill="#58a6ff", outline="")
 
-        cv.create_text(10, 12, anchor="nw", text=f"6 motores · empuje {empuje * 100:.0f}%",
+        # pods laterales giratorios: flecha de empuje según su giro
+        for s in (1, -1):
+            hub = np.array([2.0, s * 56.0, -12.0])
+            a = math.radians(self.pod_ang)
+            tip = hub + np.array([math.cos(a), math.sin(a), 0.0]) * 42.0
+            hx, _, hz = self._proyectar(np.array([hub]))
+            tx, _, tz = self._proyectar(np.array([tip]))
+            cv.create_line(cx + hx[0] * s, cz - hz[0] * s,
+                           cx + tx[0] * s, cz - tz[0] * s,
+                           fill=COL_AMBAR, width=2)
+            cv.create_oval(cx + hx[0] * s - 2, cz - hz[0] * s - 2,
+                           cx + hx[0] * s + 2, cz - hz[0] * s + 2,
+                           fill=COL_AMBAR, outline="")
+
+        cv.create_text(10, 12, anchor="nw", text=f"8 motores · empuje {empuje * 100:.0f}%",
                        fill="#8b949e", font=("Consolas", 9))
         if golpe_act:
             cv.create_text(w - 10, 12, anchor="ne",
@@ -1857,6 +1877,19 @@ class App(tk.Tk):
                 cmd = {"x": 0.0, "y": 0.0, "z": 0.0, "r": 0.0}
             if self.link:
                 self.link.cmd = cmd
+
+            # pods laterales giratorios: apuntan al movimiento pedido
+            lat = cmd.get("y", 0.0)
+            fwd = max(0.0, cmd.get("x", 0.0)) * 0.3
+            self.pod_ang = -lat * 90.0
+            self.pod_emp = max(abs(lat), fwd)
+            if self._sock and self.estado["conectado"]:
+                try:
+                    self._sock.sendto(
+                        f"POD {self.pod_ang:.1f} {self.pod_emp:.2f}".encode("utf-8"),
+                        (self.cfg["sub_ip"], self.cfg.get("pod_puerto_udp", 14552)))
+                except Exception:
+                    pass
 
             # pinza: teclado (G/H) o mando (X/Y)
             if "g" in self.teclas:

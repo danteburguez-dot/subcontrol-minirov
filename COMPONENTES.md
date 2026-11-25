@@ -34,8 +34,9 @@ Todos los precios aproximados (USD ≈ EUR). Los motores/servos van sellados seg
 | 10 | 6× motor brushless 2212/2836 | 1000–1400 KV | 6 × 15 = 90 |
 | 11 | 6× hélice 2-hélices/hélice 3 palas | 8–9 pulgadas | 6 × 4 = 24 |
 | 12 | 6× tubo de motor + aceite mineral | sellado eje con O-ring ×2 | 6 × 6 = 36 |
-| 13 | **8× ESC Readytosky 40A 2–6S OPTO** (2 packs de 4 → 6 para los motores + 2 de repuesto) | configurar **modo 3D/reversa** en BLHeliSuite32 + encapsular en epoxi (acuáticos) | 2 × 40 = 80 |
+| 13 | **8× ESC Readytosky 40A 2–6S OPTO** (2 packs de 4 → 6 motores + 2 pods laterales) | configurar **modo 3D/reversa** en BLHeliSuite32 + encapsular en epoxi (acuáticos) | 2 × 40 = 80 |
 | 14 | Anillos de boquilla impresos | nozzle | 5 |
+| 14b | **2 pods laterales giratorios**: 2× motor A2212 + 2× **servo sumergible DS3218 (IP67)** + 2× **anillo deslizante 6 hilos** + soportes impresos | los pods **giran enteros** (sin eje que atraviese sello = sin fugas) → empuje lateral de precisión | 19 + 36 + 16 + 6 = **77** |
 
 **Subtotal propulsión: ≈ 239**
 

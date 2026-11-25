@@ -59,9 +59,10 @@ ninguna fuga, giro libre.
 1. Corta el tubo PVC de 25 mm: 4 rieles largos de 56 cm + 4 montantes de 16 cm +
    2 travesaños de 30 cm (según medidas del modelo 3D).
 2. Pégalos con codo/PVC cemento siguiendo la plantilla del `modelo3d.scad`.
-3. Fija con abrazaderas inox los 6 motores: horizontales en (±235, ±105) y
-   verticales en (±150, ±75) — **los verticales diagonalmente opuestos**
-   (para equilibrar el par de giro).
+3. Motores: los **4 horizontales en la placa de popa** (en 2×2, y = ±42,
+   z = −14 y +16 — máximo empuje hacia adelante), los **2 verticales como
+   torretas en cubierta** (x = ±150) y los **2 pods laterales giratorios** en
+   los costados (servo sumergible DS3218 + anillo deslizante de 6 hilos).
 4. Coloca el casco en el centro con abrazaderas acolchadas.
 
 ---
@@ -202,6 +203,8 @@ canales 8–9 (pares) vía los MOSFET/relés.
    URLs RTSP de las 5 cámaras → **APLICAR Y RECONECTAR**.
 7. Prueba en la app: telemetría (profundidad 0.0 m), luces ON/OFF, pinza, PTZ girando.
 8. Activa el servicio `companero_carga.py` (indicador de carga con las luces).
+9. Activa `companero_vectored.py` (servicio): mueve los 2 pods laterales
+   giratorios según las órdenes de la app (UDP puerto 14552).
 
 ---
 

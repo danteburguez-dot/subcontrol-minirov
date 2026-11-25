@@ -11,12 +11,14 @@ más barata con buen vendedor (>95% valoración) y añade al carrito. Al final, 
 
 | Cant | Buscar en AliExpress | Precio unit. | Subtotal |
 |---|---|---|---|
-| 6 | `A2212 1000KV brushless motor` | $9.50 | $57 |
+| 8 | `A2212 1000KV brushless motor` (6 motores + 2 pods laterales) | $9.50 | $76 |
 | 8 | `Readytosky 40A ESC 2-6S OPTO` (pack ×4) | $40 / pack ×2 | $80 |
 | 6 | `propeller 8045 3 blade` | $3 | $18 |
+| 2 | `DS3218 waterproof servo 20kg` (servos de los pods) | $18 | $36 |
+| 2 | `mini slip ring 6 wire` (giro de los pods) | $8 | $16 |
 | — | `mineral oil` o aceite de silicona puro (1 L) | $8 | $8 |
 
-**Subtotal propulsión: ≈ $163**
+**Subtotal propulsión: ≈ $240**
 
 ## Electrónica
 
@@ -108,7 +110,7 @@ más barata con buen vendedor (>95% valoración) y añade al carrito. Al final, 
 | Arpoón + pinza | $45.50 |
 | Energía (carga + protección) | $148 |
 | Casco + cableado | $88 |
-| **CARRITO ALIEXPRESS TOTAL** | **≈ $737** (+ envío combinado ~$15–30) |
+| **CARRITO ALIEXPRESS TOTAL** | **≈ $815** (+ envío combinado ~$15–30) |
 
 ### Fuera de AliExpress (compra aparte)
 
@@ -117,7 +119,7 @@ más barata con buen vendedor (>95% valoración) y añade al carrito. Al final, 
 | **DEWALT DCB205-2C** (2× batería 20V MAX 5Ah + cargador) | Home Depot / Lowe's / Amazon | $149 |
 | Tubo PVC 25 mm + codos + herrajes inox + espuma PU | ferretería local | ~$35 |
 | Herrajes/diversos (tornillería A4, tuercas, abrazaderas) | ferretería local | ~$15 |
-| **TOTAL REAL DEL PROYECTO** | | **≈ $937** |
+| **TOTAL REAL DEL PROYECTO** | | **≈ $1.065** |
 
 ### Notas del carrito
 
@@ -137,12 +139,12 @@ Tipo de cambio usado: **1 USD ≈ ₲ 6.420** (25/11/2026, Paraguay).
 
 | Concepto | USD | Guaraníes (≈) |
 |---|---|---|
-| Carrito AliExpress (todo el hardware) | $738 | ₲ 4.740.000 |
+| Carrito AliExpress (todo el hardware) | $815 | ₲ 5.230.000 |
 | Envío combinado AliExpress | $20 | ₲ 130.000 |
 | Kit DEWALT DCB205-2C (2 baterías 20V + cargador) | $149 | ₲ 957.000 |
 | Ferretería local (PVC, herrajes, epoxi, foam) | $50 | ₲ 320.000 |
 | Impresión 3D de las piezas (soportes PTZ, pinza, anclas) | $30 | ₲ 193.000 |
-| **TOTAL DEL PROYECTO COMPLETO** | **≈ $987** | **≈ ₲ 6.330.000** |
+| **TOTAL DEL PROYECTO COMPLETO** | **≈ $1.065** | **≈ ₲ 6.840.000** |
 
 ### Referencias rápidas
 
