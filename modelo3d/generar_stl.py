@@ -18,6 +18,7 @@ Diseño (unidades: mm, X = adelante, Y = lateral, Z = arriba):
 
 Salida: submarino.stl y submarino.glb (abrir con "Visor 3D" de Windows).
 """
+import math
 import os
 import numpy as np
 import trimesh
@@ -148,16 +149,25 @@ for pos in ([245, 0, 78], [245, 0, -70], [245, 95, 0], [245, -95, 0]):
     partes.append(cil(30, 26, pos, BLANCO, eje="x"))
     partes.append(cil(26, 4, [pos[0] + 15, pos[1], pos[2]], BLANCO, eje="x"))
 
-# ================= 5 CÁMARAS (3 con giro PTZ 360°) =================
+# ================= 5 CÁMARAS (3 domos PTZ 360° con anillo LED) =================
 partes.append(esfera(42, [258, 0, 8], CRISTAL))                            # CAM1 punta (domo)
 partes.append(cil(18, 22, [65, 0, 56], GRIS_OSC, eje="z"))                 # servo PTZ CAM2
-partes.append(cil(15, 26, [65, 0, 74], PLATA, eje="z"))                    # CAM2 arriba (PTZ)
+partes.append(esfera(20, [65, 0, 72], CRISTAL))                            # cúpula CAM2
+for k in range(6):                                                         # anillo 6 LEDs CAM2
+    a = math.radians(k * 60)
+    partes.append(cil(4, 9, [65 + 17 * math.cos(a), 17 * math.sin(a), 60], BLANCO, eje="z"))
 partes.append(cil(15, 26, [40, 0, -74], PLATA, eje="z",
                   rot_extra=(180, [0, 0, 1])))                             # CAM3 abajo (fija)
-for pos in ([78, 62, 0], [78, -62, 0]):                                    # servos PTZ laterales
-    partes.append(caja([26, 26, 24], pos, GRIS_OSC))
-partes.append(cil(15, 26, [78, 76, 0], PLATA, eje="y"))                    # CAM4 izquierda (PTZ)
-partes.append(cil(15, 26, [78, -76, 0], PLATA, eje="y"))                   # CAM5 derecha (PTZ)
+for yy in (62, -62):                                                       # servos PTZ laterales
+    partes.append(caja([26, 26, 24], [78, yy, 0], GRIS_OSC))
+sgn = 1
+for yy in (62, -62):                                                       # domos CAM4/CAM5 + LEDs
+    partes.append(esfera(20, [78, yy + sgn * 18, 0], CRISTAL))
+    for k in range(6):
+        a = math.radians(k * 60)
+        partes.append(cil(4, 9, [78 + 17 * math.cos(a), yy + sgn * 24, 17 * math.sin(a)],
+                          BLANCO, eje="y"))
+    sgn = -1
 
 # ================= ARPOÓN + GIMBAL + CARRETE =================
 partes.append(caja([90, 60, 60], [60, 0, -100], GRIS_OSC))                 # caja gimbal (servos)
@@ -176,13 +186,18 @@ for signo in (1, -1):
     partes.append(caja([75, 14, 16], [285, signo * 30, -118], ACERO,
                         rot=(signo * 14, [0, 0, 1])))                      # dedos dentados
 
-# ================= BAHÍA DE BATERÍA INTERCAMBIABLE =================
-partes.append(caja([180, 74, 52], [-90, 0, -58], NARANJA))                 # batería 4S
-partes.append(caja([190, 84, 8], [-90, 0, -26], GRIS_OSC))                 # hatch rápido
-partes.append(caja([30, 10, 8], [-90, 0, -20], AMARILLO))                  # asa del hatch
+# ================= BAHÍA DE BATERÍAS 2× DEWALT DCB205 =================
+partes.append(caja([215, 82, 78], [-130, 0, -55], NARANJA))                 # 2 packs 20V 5Ah
+partes.append(caja([225, 92, 8], [-130, 0, -13], GRIS_OSC))                 # hatch rápido
+partes.append(caja([30, 10, 8], [-130, 0, -7], AMARILLO))                   # asa del hatch
 
 # ================= TETHER =================
 partes.append(cil(10, 26, [-240, 0, -45], PLATA, eje="x"))                 # prensa-estopas
+
+# ================= PUERTA DE CARGA (la "puertita") =================
+partes.append(caja([36, 8, 44], [-140, -56, 0], GRIS_OSC))                 # puerta lateral
+partes.append(cil(7, 10, [-140, -64, 0], PLATA, eje="y"))                  # conector XT60 panel
+partes.append(caja([10, 6, 10], [-115, -56, 18], VERDE))                   # LED indicador
 
 # ================= EXPORTAR =================
 modelo = trimesh.util.concatenate(partes)

@@ -11,6 +11,7 @@
    ← / →        : girar (yaw)
    1            : luces par 1 (superiores)  ON/OFF
    2            : luces par 2 (inferiores)  ON/OFF
+   3            : luces de los domos PTZ (cámaras 2/4/5) ON/OFF
    L            : todas las luces ON/OFF
    G (mantener) : abrir pinza
    H (mantener) : cerrar pinza
@@ -116,9 +117,10 @@ DEFAULT_CONFIG = {
     "canal_gimbal_pitch": 12, # servo gimbal arpoón — elevación
     "canal_arpon": 13,        # servo disparador arpoón
     "canal_carrete": 14,      # motor carrete del hilo (recogida)
+    "canal_luces_ptz": 15,    # anillos LED de las 3 cámaras domo PTZ
     "gimbal_rango_grados": 60,
     "autoapuntado": True,
-    "capacidad_wh": 148,  # batería 4S 10 Ah ≈ 148 Wh
+    "capacidad_wh": 180,  # 2× DeWalt DCB205 20V 5Ah (90 Wh c/u)
     "potencia_media_w": 120,
     "invertir_eje_z": False,
     "escala_movimiento": 800,
@@ -261,7 +263,7 @@ class SubLink(threading.Thread):
         self.alive = threading.Event()
         self.alive.set()
         self.cmd = {"x": 0.0, "y": 0.0, "z": 0.0, "r": 0.0}
-        self.aux = {"luces1": False, "luces2": False, "pinza": 0,
+        self.aux = {"luces1": False, "luces2": False, "luces_ptz": False, "pinza": 0,
                     "gimbal_yaw": 1500.0, "gimbal_pitch": 1500.0,
                     "arpon": 1000, "carrete": 1500}  # pinza: 1 abrir, -1 cerrar, 0 centro
         self._arpon_hasta = 0.0
@@ -456,6 +458,7 @@ class SubLink(threading.Thread):
             ch[self.cfg.get("canal_gimbal_pitch", 12) - 1] = int(max(1000, min(2000, self.aux["gimbal_pitch"])))
             ch[self.cfg.get("canal_arpon", 13) - 1] = int(self.aux["arpon"])
             ch[self.cfg.get("canal_carrete", 14) - 1] = int(self.aux["carrete"])
+            ch[self.cfg.get("canal_luces_ptz", 15) - 1] = 1900 if self.aux["luces_ptz"] else 1000
         except Exception:
             pass
         try:
@@ -605,6 +608,7 @@ class App(tk.Tk):
         self.mando_btns = [False] * 16
         self.mando_prev = [False] * 16
         self.luces = [False, False]
+        self.luces_ptz = False     # anillos LED de los domos PTZ
         self.pinza = 0
         self.emergencia = None
         self.gimbal = {"yaw": 0.0, "pitch": 0.0}   # grados del gimbal del arpoón
@@ -821,6 +825,11 @@ class App(tk.Tk):
                                 activebackground=COL_BORDE, relief="flat",
                                 font=("Segoe UI", 9), command=lambda: self._toggle_luces(1))
         self.btn_l2.pack(side="left", fill="x", expand=True, padx=(3, 0))
+        self.btn_lptz = tk.Button(s, text="Luces de domos PTZ   [3]", bg=COL_PANEL,
+                                  fg=COL_ACENTO, activebackground=COL_BORDE,
+                                  relief="flat", font=("Segoe UI", 9, "bold"),
+                                  command=self._toggle_luces_ptz)
+        self.btn_lptz.pack(fill="x", padx=10, pady=(0, 2))
         tk.Button(s, text="Todas ON / OFF   [L]", bg=COL_PANEL, fg=COL_AMBAR,
                   activebackground=COL_BORDE, relief="flat", font=("Segoe UI", 9, "bold"),
                   command=self._toggle_todas).pack(fill="x", padx=10, pady=(0, 8))
@@ -982,6 +991,8 @@ class App(tk.Tk):
             self._toggle_luces(1)
         elif k == "l":
             self._toggle_todas()
+        elif k == "3":
+            self._toggle_luces_ptz()
         elif k == "p":
             self._toggle_seguro()
         elif k == "y":
@@ -1027,6 +1038,12 @@ class App(tk.Tk):
             self.link.aux["luces1"] = destino
             self.link.aux["luces2"] = destino
         self.log(f"Todas las luces: {'ON' if destino else 'OFF'}")
+
+    def _toggle_luces_ptz(self):
+        self.luces_ptz = not self.luces_ptz
+        if self.link:
+            self.link.aux["luces_ptz"] = self.luces_ptz
+        self.log(f"Luces de los domos PTZ: {'ON' if self.luces_ptz else 'OFF'}")
 
     def _pinza_btn(self, v):
         self.pinza = v
@@ -1400,6 +1417,8 @@ class App(tk.Tk):
                               fg="#111" if self.luces[0] else COL_TEXTO)
         self.btn_l2.configure(bg=COL_AMBAR if self.luces[1] else COL_PANEL,
                               fg="#111" if self.luces[1] else COL_TEXTO)
+        self.btn_lptz.configure(bg=COL_AMBAR if self.luces_ptz else COL_PANEL,
+                                fg="#111" if self.luces_ptz else COL_ACENTO)
 
         self.lbl_gimbal.configure(text=f"G:{self.gimbal['yaw']:+.0f}° P:{self.gimbal['pitch']:+.0f}°")
         if self.arpon_seguro:
@@ -1515,6 +1534,8 @@ class App(tk.Tk):
             self.pinza = p
             if self.link:
                 self.link.aux["pinza"] = p
+            if self.link:
+                self.link.aux["luces_ptz"] = self.luces_ptz
 
             # gimbal del arpoón: teclado U/I/O/K o autoapuntado
             manual_gim = ("u" in self.teclas or "i" in self.teclas

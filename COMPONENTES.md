@@ -34,23 +34,50 @@ Todos los precios aproximados (USD ≈ EUR). Los motores/servos van sellados seg
 | 10 | 6× motor brushless 2212/2836 | 1000–1400 KV | 6 × 15 = 90 |
 | 11 | 6× hélice 2-hélices/hélice 3 palas | 8–9 pulgadas | 6 × 4 = 24 |
 | 12 | 6× tubo de motor + aceite mineral | sellado eje con O-ring ×2 | 6 × 6 = 36 |
-| 13 | 6× ESC acuático 30–40 A | con condensador | 6 × 14 = 84 |
+| 13 | **8× ESC Readytosky 40A 2–6S OPTO** (2 packs de 4 → 6 para los motores + 2 de repuesto) | configurar **modo 3D/reversa** en BLHeliSuite32 + encapsular en epoxi (acuáticos) | 2 × 40 = 80 |
 | 14 | Anillos de boquilla impresos | nozzle | 5 |
 
 **Subtotal propulsión: ≈ 239**
 
-## 4. Energía — doble batería con conmutación automática
+## 4. Energía — doble batería 20 V a prueba de todo (cero precauciones)
+
+Diseño autónomo: conectas cualquier batería (llena, a medio usar, incluso descargada) en cualquier orden y el sistema se protege solo.
 
 | # | Componente | Specs | Precio |
 |---|---|---|---|
-| 15 | 2× batería LiPo 4S 10 Ah | plug XT60, marca certificada | 2 × 55 = 110 |
-| 16 | 2× módulo diodo-ideal ORing 60 A | cambio automático sin corte (LTC4357) | 2 × 12 = 24 |
-| 17 | 2× sensor INA219 | miden V/A de cada batería (I2C → app) | 2 × 4 = 8 |
-| 18 | Cargador de balanceo 4S + fuente | carga A y B (o paraboard para ambas) | 35 |
-| 19 | Regulador 5 V/12 V + fusibles | para Pi, luces, servos | 12 |
-| 20 | Bolsas LiPo-safe ×2 + hatch | guardado y extracción | 12 |
+| 15 | **DEWALT DCB205-2C** (kit: 2× batería 20 V MAX XR 5.0 Ah **+ cargador**) | BMS integrado: corte automático por sobredescarga, sobrecarga, corto y sobrecorriente. 18 V nominal / 21 V cargada, 90 Wh c/u, 20 A continuos | **149** (las 2 baterías + cargador) * |
+| 16 | 2× adaptador pack-herramienta → XT60 **anti-chispa** | sin arco al conectar, polaridad mecánicamente imposible de invertir | 2 × 12 = 24 |
+| 17 | 2× módulo **corte por bajo voltaje (LVD)** 40 A | desconecta la batería sola al llegar a 15,0 V — imposible dañarla por descarga | 2 × 15 = 30 |
+| 18 | 2× **diodo-ideal ORing 60 A** | cambio automático entre baterías sin corte (5–30 V) | 2 × 12 = 24 |
+| 19 | 2× **interruptor automático (breaker) 40 A** | si hay un corto, se dispara y se rearma con un clic (no cambia fusibles) | 2 × 8 = 16 |
+| 20 | Banco de capacitores 1000 µF/35 V + **TVS 30 V** | absorben picos de arranque de motores y regeneración | 10 |
+| 21 | Reguladores 5 V/12 V de **entrada ancha (9–40 V)** | aguantan cualquier voltaje de batería sin quemarse | 14 |
+| 22 | 2× sensor INA219 | mide V/A de cada batería → app | 2 × 4 = 8 |
+| 23 | Sensor de temperatura DS18B20 | alarma en la app si el compartimento de baterías calienta | 2 |
+| 24 | **La "puertita" de carga**: hatch lateral estanco + conector XT60 de panel | carga desde la pared sin abrir el casco | 17 |
+| 25 | 2× módulo **cargador CC-CV 21 V/3 A con balance** (compatible packs DeWalt, con emulación de termistor) | cargan los packs a bordo con seguridad | 2 × 30 = 60 |
+| 26 | Fuente de pared 24 V/90 W | se conecta a la puertita (solo sub en seco) | 20 |
 
-**Subtotal energía: ≈ 201**
+\* Equivalentes si prefieres otra marca (mismo concepto "18/20 V MAX"): **Makita BL1850B** (kit BL1850B-2) · **Milwaukee M18 B5** (kit M18 B5-502) · **Ryobi ONE+ 5 Ah** (el más económico). Si ya tienes herramientas y baterías, valen **0** — solo compra los adaptadores.
+
+**Subtotal energía: ≈ 375** (o ≈ 225 con baterías propias)
+
+### 🛡️ Por qué NO necesita precauciones
+
+| Riesgo | Lo elimina |
+|---|---|
+| Chispa/arco al conectar | Adaptadores anti-chispa |
+| Conectar al revés | Conector de herramienta: físicamente asimétrico |
+| Descarga profunda (daña batería) | BMS del pack + módulo LVD a 15 V |
+| Cortocircuito | Breaker rearmable + BMS |
+| Sobrecarga al cargar | Cargador de la marca (corta solo) — cargas como un celular |
+| Corriente inversa entre baterías | Diodo-ideal |
+| Picos de los motores | Banco de capacitores + TVS |
+| Voltaje incorrecto quema electrónica | Reguladores de entrada ancha + ESCs 2–6S |
+| Sobrecalentamiento | Breaker + BMS + sensor DS18B20 con alarma en la app |
+| Carga mal hecha | Cargador CC-CV a bordo con balance: enchufas la fuente y listo (como un celular) |
+
+**Carga:** dos modos — (1) packs en su cargador DeWalt de pared, o (2) **desde la puertita** con la fuente de 24 V. Con `companero_carga.py` en la Pi: mientras carga las **4 luces parpadean lento** y al completar **parpadean rápido** (aviso de desconectar). Solo con el sub en seco.
 
 ## 5. Electrónica central
 
@@ -60,7 +87,7 @@ Todos los precios aproximados (USD ≈ EUR). Los motores/servos van sellados seg
 | 20 | Tarjeta microSD 32 GB | A2 | 8 |
 | 21 | Sensor presión MS5837-30BA | profundidad hasta 300 m | 22 |
 | 22 | IMU BNO055 (o MPU6050) | estabilización + **sensor de golpes** | 15 |
-| 23 | PCA9685 16 canales I2C | servos PTZ + gimbal + extras | 8 |
+| 23 | 2× PCA9685 16 canales I2C | #1 (dir. 0x40): salidas de ArduSub (motores + auxiliares) · #2 (dir. 0x41): servos de cámaras PTZ | 2 × 8 = 16 |
 
 **Subtotal electrónica: ≈ 118**
 
@@ -70,12 +97,12 @@ Todos los precios aproximados (USD ≈ EUR). Los motores/servos van sellados seg
 |---|---|---|---|
 | 24 | CAM1 Punta: cámara USB HD | en domo frontal | 18 |
 | 25 | CAM3 Abajo: cámara USB HD | mira la pinza (fija) | 15 |
-| 26 | CAM2 Arriba: USB + servo 360° | vigilancia PTZ | 15 + 6 |
-| 27 | CAM4 Izquierda: USB + servo 360° | vigilancia PTZ | 15 + 6 |
-| 28 | CAM5 Derecha: USB + servo 360° | vigilancia PTZ | 15 + 6 |
+| 26 | CAM2 Arriba: **cámara domo PTZ** (USB + cúpula acrílica + anillo 6 LEDs blancos + servo 360°) | vigilancia con luz propia para oscuridad | 15 + 10 |
+| 27 | CAM4 Izquierda: **cámara domo PTZ** (igual) | vigilancia con luz propia | 15 + 10 |
+| 28 | CAM5 Derecha: **cámara domo PTZ** (igual) | vigilancia con luz propia | 15 + 10 |
 | 29 | 3× soportes PTZ impresos | estancos con O-ring | 9 |
 
-**Subtotal cámaras: ≈ 105**
+**Subtotal cámaras: ≈ 126**
 
 ## 7. Luces (4 × 10 W a 90°)
 
@@ -83,8 +110,10 @@ Todos los precios aproximados (USD ≈ EUR). Los motores/servos van sellados seg
 |---|---|---|---|
 | 30 | 4× LED buceo 10 W | lente 90°, ~1100 lm c/u | 4 × 12 = 48 |
 | 31 | 4× relé/MOSFET 12 V | control por canales 8–9 | 8 |
+| 32 | 18× LED blanco 5 mm potente (anillos de los 3 domos PTZ) | luz propia de cada domo (canal 15) | 12 |
+| 33 | MOSFET canal 15 + 3 resistencias | enciende los 3 anillos a la vez | 3 |
 
-**Subtotal luces: ≈ 56**
+**Subtotal luces: ≈ 71**
 
 ## 8. Arpoón con hilo (potencia plena a 2 m)
 
@@ -130,18 +159,18 @@ Todos los precios aproximados (USD ≈ EUR). Los motores/servos van sellados seg
 | Casco presurizado | ~115 |
 | Frame + flotabilidad | ~40 |
 | 6 motores + ESCs | ~239 |
-| Energía (2 baterías + conmutación auto + cargador) | ~201 |
+| Energía (2 baterías 20 V herramienta, cero precauciones) | ~278 |
 | Electrónica central | ~118 |
 | 5 cámaras (3 PTZ) | ~105 |
 | 4 luces 10 W | ~56 |
 | Arpoón + hilo + gimbal | ~78 |
 | Pinza reforzada | ~24 |
 | Tether + consola | ~45 |
-| **TOTAL** | **≈ 1.020 USD** (900–1.150 según proveedor y envío) |
+| **TOTAL** | **≈ 1.230 USD** (≈ 1.080 si ya tienes las baterías DeWalt) |
 
 ### Versiones ajustadas
 - **Económica (~700):** 4 motores en vez de 6, 3 cámaras (1 PTZ), luces 2 × 10 W, 1 sola batería.
-- **Recomendada (~1.020):** todo lo de esta lista (la de este proyecto).
+- **Recomendada (~1.230):** todo lo de esta lista (la de este proyecto).
 - **Pro (~1.300):** Pi 5, cámaras de mayor luminosidad, lastre activo, 2° batería extra.
 
 ### ⚡ Variante con baterías de 20 V (5S)

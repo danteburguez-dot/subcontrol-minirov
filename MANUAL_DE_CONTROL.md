@@ -25,6 +25,7 @@ pinza reforzada · sensor de golpes · modelo 3D en vivo.
 | `←` / `→` | Girar (yaw) |
 | `ESPACIO` | Parada inmediata de motores |
 | `1` / `2` | Luces par superior / inferior (ON-OFF) |
+| `3` | Luces de los domos PTZ (ON-OFF) |
 | `L` | Todas las luces (ON-OFF) |
 | `G` (mantener) | Abrir pinza |
 | `H` (mantener) | Cerrar pinza |
@@ -119,13 +120,13 @@ Puedes hacerlo a mano siempre: `G`/`H` para la pinza y los sticks para acercarte
 - **F3 — NORMALIZAR:** cancela la emergencia.
 - El cable de 20 m también sirve para **halvar el sub a mano** en rescate.
 
-## 10. Doble batería con cambio automático
+## 10. Doble batería DeWalt 20 V con cambio automático
 
-- El sub lleva **2 baterías LiPo 4S conectadas por módulos diodo-ideal**: la que tiene más voltaje alimenta todo el sistema y, cuando una se agota, **la otra toma el control en microsegundos — sin corte de energía**.
-- En la app verás el estado de la batería en uso; con los sensores INA219 instalados, se pueden mostrar las dos por separado (Bat A / Bat B).
-- **Carga:** abre el hatch, desconecta ambas XT60 y carga con el cargador de balanceo 4S (primero A, luego B, o las dos a la vez con placa paralela si tienen voltajes parecidos). Si son baterías de 20 V (5S o de herramientas), el cargador debe ser 5S o el de tu marca de herramientas.
-- Carga **nunca** dentro del sub ni en ambiente húmedo; siempre supervisada.
-- Si no vas a usar el sub en días: guarda las baterías al 50% (3,8 V/celda) en bolsas LiPo-safe.
+- El sub lleva **2 packs DeWalt DCB205 20V MAX 5Ah** con módulos diodo-ideal: la que tiene más voltaje alimenta todo y, cuando una se agota, **la otra toma el control en microsegundos — sin corte**.
+- Con los sensores INA219 la app puede mostrar las dos baterías por separado (Bat A / Bat B).
+- **Carga modo 1:** saca los packs y ponlos en el cargador DeWalt — corta y balancea solo.
+- **Carga modo 2 (la puertita):** con el sub **en seco**, conecta la fuente de pared 24 V al puerto lateral. Mientras carga, **las 4 luces parpadean LENTO**; cuando ambas baterías están llenas, **parpadean RÁPIDO** unos minutos (aviso de "desconecta"). Vigilado por `companero_carga.py` en la Pi.
+- Reglas fijas: cargar **nunca** con el sub en el agua ni mojado; packs guardados secos y por debajo de 3 meses sin recargar.
 
 ## 11. Seguridad
 

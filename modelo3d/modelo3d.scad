@@ -111,21 +111,28 @@ color("white") {
     luz_led([245, -95, 0]);
 }
 
-// 5 CÁMARAS (3 con giro PTZ 360°)
-color("lightskyblue", 0.6) translate([casco_l / 2 + 24, 0, 8]) sphere(r = 40); // CAM1 punta
+// 5 CÁMARAS (3 domos PTZ 360° con anillo LED para oscuridad)
+color("lightskyblue", 0.6) {
+    translate([casco_l / 2 + 24, 0, 8]) sphere(r = 40);                   // CAM1 punta
+    translate([65, 0, 72]) sphere(r = 20);                                // cúpula CAM2
+    translate([78, 80, 0]) sphere(r = 20);                                // cúpula CAM4
+    translate([78, -80, 0]) sphere(r = 20);                               // cúpula CAM5
+}
+color("white")
+for (i = [0:5]) {
+    translate([65 + 17 * cos(i * 60), 17 * sin(i * 60), 60])
+        cylinder(r = 4, h = 9, center = true);                            // LEDs CAM2
+    for (s = [1, -1])
+        translate([78 + 17 * cos(i * 60), s * 84, 17 * sin(i * 60)])
+            rotate([90, 0, 0]) cylinder(r = 4, h = 9, center = true);     // LEDs CAM4/CAM5
+}
 color("dimgray") {
     translate([65, 0, 56]) cylinder(r = 18, h = 22, center = true);       // servo PTZ
     translate([78, 62, 0]) cube([26, 26, 24], center = true);             // servo PTZ izq
     translate([78, -62, 0]) cube([26, 26, 24], center = true);            // servo PTZ der
 }
-color("silver") {
-    translate([65, 0, 74]) cylinder(r = 15, h = 26, center = true);       // CAM2 arriba PTZ
+color("silver")
     translate([40, 0, -74]) cylinder(r = 15, h = 26, center = true);      // CAM3 abajo
-    translate([78, 76, 0]) rotate([0, 90, 0])
-        cylinder(r = 15, h = 26, center = true);                          // CAM4 izquierda PTZ
-    translate([78, -76, 0]) rotate([0, 90, 0])
-        cylinder(r = 15, h = 26, center = true);                          // CAM5 derecha PTZ
-}
 
 // ARPOÓN: gimbal + cañón + gomas + carrete de hilo
 color("dimgray") {
@@ -162,3 +169,9 @@ color("gold") translate([-90, 0, -20]) cube([30, 10, 8], center = true);
 // TETHER (salida del cable de 20 m)
 color("silver") translate([-240, 0, -45])
     rotate([0, 90, 0]) cylinder(r = 10, h = 26, center = true);
+
+// PUERTA DE CARGA (la "puertita") + conector XT60 + LED
+color("dimgray") translate([-140, -56, 0]) cube([36, 8, 44], center = true);
+color("silver") translate([-140, -64, 0])
+    rotate([90, 0, 0]) cylinder(r = 7, h = 10, center = true);
+color("mediumseagreen") translate([-115, -56, 18]) cube([10, 6, 10], center = true);
