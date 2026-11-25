@@ -678,8 +678,9 @@ class App(tk.Tk):
         self.ptz_sel = None         # cámara PTZ seleccionada
         self.ptz_auto = False       # vigilancia automática
         self._last_ptz = {}
-        self.pod_ang = 0.0          # ángulo de los pods laterales giratorios
-        self.pod_emp = 0.0          # empuje de los pods (0..1)
+        self.pod_ang_izq = 0.0      # ángulo pod izquierdo (0 = adelante)
+        self.pod_ang_der = 0.0      # ángulo pod derecho (180 = atrás)
+        self.pod_emp = 0.0          # empuje común de los pods (0..1)
         try:
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         except Exception:
@@ -1522,10 +1523,10 @@ class App(tk.Tk):
                            cx + hx[0] * s + 3, cz - hz[0] * s + 3,
                            fill="#58a6ff", outline="")
 
-        # pods laterales giratorios: flecha de empuje según su giro
-        for s in (1, -1):
+        # pods laterales giratorios: flecha de empuje (pueden ir en sentidos opuestos)
+        for s, ang_pod in ((1, self.pod_ang_izq), (-1, self.pod_ang_der)):
             hub = np.array([2.0, s * 56.0, -12.0])
-            a = math.radians(self.pod_ang)
+            a = math.radians(ang_pod)
             tip = hub + np.array([math.cos(a), math.sin(a), 0.0]) * 42.0
             hx, _, hz = self._proyectar(np.array([hub]))
             tx, _, tz = self._proyectar(np.array([tip]))
@@ -1878,15 +1879,24 @@ class App(tk.Tk):
             if self.link:
                 self.link.cmd = cmd
 
-            # pods laterales giratorios: apuntan al movimiento pedido
+            # pods laterales giratorios: laterales y PAR DE GIRO 360°
             lat = cmd.get("y", 0.0)
+            yaw = cmd.get("r", 0.0)
             fwd = max(0.0, cmd.get("x", 0.0)) * 0.3
-            self.pod_ang = -lat * 90.0
-            self.pod_emp = max(abs(lat), fwd)
+            if abs(yaw) > 0.12:
+                # girar en el sitio: un pod empuja adelante y el otro atrás
+                a_i = 0.0 if yaw > 0 else 180.0
+                a_d = 180.0 if yaw > 0 else 0.0
+                e_i = e_d = abs(yaw)
+            else:
+                a_i = a_d = -lat * 90.0
+                e_i = e_d = max(abs(lat), fwd)
+            self.pod_ang_izq, self.pod_ang_der = a_i, a_d
+            self.pod_emp = max(e_i, e_d)
             if self._sock and self.estado["conectado"]:
                 try:
                     self._sock.sendto(
-                        f"POD {self.pod_ang:.1f} {self.pod_emp:.2f}".encode("utf-8"),
+                        f"POD {a_i:.1f} {e_i:.2f} {a_d:.1f} {e_d:.2f}".encode("utf-8"),
                         (self.cfg["sub_ip"], self.cfg.get("pod_puerto_udp", 14552)))
                 except Exception:
                     pass

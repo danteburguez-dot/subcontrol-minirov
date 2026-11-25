@@ -4,9 +4,11 @@
 companero_vectored.py — corre en la Raspberry Pi DENTRO del submarino.
 
 Controla los 2 PODS LATERALES GIRATORIOS (empuje vectorizado):
-  · Recibe por UDP (puerto 14552):  "POD <angulo> <empuje>"
-      <angulo>:  -90..+90 grados (0 = hacia adelante)
-      <empuje>:  0.0 .. 1.0
+  · Recibe por UDP (puerto 14552):
+      "POD <ang_izq> <emp_izq> <ang_der> <emp_der>"
+      <ang>: 0 = hacia adelante · 90 = hacia el costado · 180 = hacia atrás
+      <emp>: 0.0 .. 1.0
+    (también acepta el formato viejo de 3 campos para compatibilidad)
   · Mueve por I2C (PCA9685 #2, dirección 0x41):
       ch4 = ESC pod izquierdo   · ch5 = ESC pod derecho
       ch6 = servo pod izquierdo · ch7 = servo pod derecho
@@ -35,22 +37,27 @@ except Exception as e:
     print("ServoKit #2 no disponible (modo simulación):", e)
     OK = False
 
-ang_obj, emp_obj = 0.0, 0.0
-ang_act, emp_act = 0.0, 0.0
+# objetivos y valores actuales (izquierda / derecha)
+ang_obj_i = ang_obj_d = 0.0
+emp_obj_i = emp_obj_d = 0.0
+ang_act_i = ang_act_d = 0.0
+emp_act_i = emp_act_d = 0.0
 
 
 def aplicar():
-    global ang_act, emp_act
-    ang_act += (ang_obj - ang_act) * ANG_SUAVE
-    emp_act += (emp_obj - emp_act) * ANG_SUAVE
+    global ang_act_i, ang_act_d, emp_act_i, emp_act_d
+    ang_act_i += (ang_obj_i - ang_act_i) * ANG_SUAVE
+    ang_act_d += (ang_obj_d - ang_act_d) * ANG_SUAVE
+    emp_act_i += (emp_obj_i - emp_act_i) * ANG_SUAVE
+    emp_act_d += (emp_obj_d - emp_act_d) * ANG_SUAVE
     if OK:
-        # ESC en modo 3D/reversa: 1500 = neutro (usamos solo adelante)
-        pulso = 1500 + max(0.0, min(1.0, emp_act)) * 400
-        for ch in (CH_ESC_IZQ, CH_ESC_DER):
+        # ESC en modo 3D/reversa: usamos solo adelante (el POD apunta la dirección)
+        for ch, e in ((CH_ESC_IZQ, emp_act_i), (CH_ESC_DER, emp_act_d)):
+            pulso = 1500 + max(0.0, min(1.0, e)) * 400
             kit.servo[ch].angle = (pulso - 1500) / 500 * 90 + 90
-        # servos: 90° = pod mirando adelante; ±90° = lados
-        for ch in (CH_SERVO_IZQ, CH_SERVO_DER):
-            kit.servo[ch].angle = 90 + max(-90.0, min(90.0, ang_act)) * 0.5
+        # servos: 90° = pod mirando adelante · 0° = atrás · 45/135 = costados
+        for ch, a in ((CH_SERVO_IZQ, ang_act_i), (CH_SERVO_DER, ang_act_d)):
+            kit.servo[ch].angle = 90 + max(-90.0, min(180.0, a)) * 0.5
 
 
 def main():
@@ -60,13 +67,19 @@ def main():
     print(f"companero_vectored escuchando UDP :{PUERTO} …")
     while True:
         try:
-            datos, _ = sock.recvfrom(64)
+            datos, _ = sock.recvfrom(96)
             partes = datos.decode("utf-8", "ignore").strip().split()
-            if len(partes) == 3 and partes[0] == "POD":
-                ang_obj = max(-90.0, min(90.0, float(partes[1])))
-                emp_obj = max(0.0, min(1.0, float(partes[2])))
+            if len(partes) == 5 and partes[0] == "POD":
+                ang_obj_i = max(0.0, min(180.0, float(partes[1]) % 360.0))
+                emp_obj_i = max(0.0, min(1.0, float(partes[2])))
+                ang_obj_d = max(0.0, min(180.0, float(partes[3]) % 360.0))
+                emp_obj_d = max(0.0, min(1.0, float(partes[4])))
+            elif len(partes) == 3 and partes[0] == "POD":   # formato viejo
+                a = max(-90.0, min(90.0, float(partes[1])))
+                ang_obj_i = ang_obj_d = a
+                emp_obj_i = emp_obj_d = max(0.0, min(1.0, float(partes[2])))
         except socket.timeout:
-            emp_obj = 0.0        # sin órdenes: motores de pods a neutro
+            emp_obj_i = emp_obj_d = 0.0    # sin órdenes: pods a neutro
         except Exception as e:
             print("Error:", e)
             time.sleep(0.3)
