@@ -40,6 +40,7 @@ pinza reforzada · sensor de golpes · modelo 3D en vivo.
 | `P` | SEGURO del arpoón ON/OFF |
 | `F4` | 🎯 Disparar arpoón |
 | `F5` (mantener) | ⏪ Recoger hilo (carrete motorizado) |
+| `N` / `M` | 🔄 GIRO 360° automático (izquierda / derecha) |
 | `,` / `.` | Girar cámara PTZ seleccionada (360°) |
 | `/` | Vigilancia automática (la PTZ gira sola) |
 | `F1` | ⛔ PARADA DE EMERGENCIA |
@@ -48,6 +49,7 @@ pinza reforzada · sensor de golpes · modelo 3D en vivo.
 
 > Los controles funcionan cuando la ventana de SUBCONTROL tiene el foco.
 > El **empuje sube y baja de a poco** (~1 s de rampa) para cuidar baterías y ESCs; **al dar reversa el cambio es instantáneo** y el freno es 4× más rápido. **En emergencias no hay rampa**: los motores van directo al pico y puedes seguir dirigiendo mientras sube (F2).
+> **Pods laterales giratorios (vertical, en pasos de 45°):** recto = miran atrás (empujan adelante) · `E` = apuntan abajo → **sube** · `Q` = apuntan arriba → **baja** · `S` = miran adelante → **retroceso**. Los pasos de 45° te permiten estabilizar el sub en el agua. `N`/`M` = giro 360° automático.
 
 ## 3. Control por MANDO (Xbox / PS4)
 

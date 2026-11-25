@@ -38,7 +38,7 @@ las pruebas**: cada fase termina con un test obligatorio.
 
 ---
 
-## FASE 2 — Motores sellados (día 3–4, 6 unidades)
+## FASE 2 — Motores sellados (día 3–4, 6 unidades + 2 pods giratorios)
 
 1. Pega cada motor brushless (2212/2836) con epoxi **dentro de su tubo** de 85 mm.
 2. Sella el eje: pasa el eje por un **doble O-ring engrasado** en la tapa del tubo.
@@ -46,11 +46,19 @@ las pruebas**: cada fase termina con un test obligatorio.
    (los bobinados aguantan aceite; compensa con un tubito de respiración).
 4. Cable de 3 hilos del motor (AwG16) soldado al **ESC Readytosky 40A 2–6S OPTO**
    (configurado ANTES en BLHeliSuite32: **modo 3D/reversa**, y encapsulado en epoxi).
-5. Marca cada motor: **FL, FR, RL, RR (horizontales) y VL, VR (verticales)**.
-6. Sella las 6 uniones ESC–tubo con silicona neutra.
+5. Marca cada motor: **PL1, PL2 (popa-izq), PR1, PR2 (popa-der), VS, VC (verticales)
+   y PI, PD (pods laterales)**.
+6. Sella las 8 uniones ESC–tubo con silicona neutra.
+7. **Los 2 pods laterales giratorios (PI/PD):** el tubo sellado del motor va
+   montado sobre un **servo sumergible DS3218 (IP67)** orientado para que el pod
+   gire en el **plano VERTICAL** (0° = adelante, 90° = hélice abajo, −90° =
+   hélice arriba, 180° = atrás). Los cables del motor pasan por un **anillo
+   deslizante de 6 hilos** — el POD COMPLETO gira sin eje atravesando sello
+   (cero fugas). El software mueve los servos **en pasos de 45°**.
 
 ✅ **Prueba:** conecta 1 ESC a un receptor/beambreaker y gira el motor 30 s —
-ninguna fuga, giro libre.
+ninguna fuga, giro libre. En los pods: manda "POD 90 0.5" por UDP y verifica
+que el servo gira el pod completo con suave paso.
 
 ---
 

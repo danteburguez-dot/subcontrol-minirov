@@ -21,6 +21,11 @@
    P            : SEGURO del arpoón ON/OFF
    F4           : 🎯 DISPARAR ARPOÓN (requiere seguro QUITADO)
    F5 (mantener): recoger hilo del arpoón (carrete motorizado)
+   N            : 🔄 GIRO 360° automático hacia la IZQUIERDA
+   M            : 🔄 GIRO 360° automático hacia la DERECHA
+   (pods laterales giran en pasos de 45°: recto = miran atrás ·
+    E = apuntan abajo → SUBE · Q = apuntan arriba → BAJA ·
+    S = miran adelante → RETROCESO)
    , / .        : girar cámara PTZ seleccionada (360°)
    /            : vigilancia automática ON/OFF (la PTZ gira sola)
    C            : AUTO-GANCHO ON/OFF (aproxima y agarra solo)
@@ -110,6 +115,7 @@ DEFAULT_CONFIG = {
     ],
     "ptz_puerto_udp": 14551,   # puerto en la Pi para mover las cámaras PTZ
     "pod_puerto_udp": 14552,   # puerto para los 2 pods laterales giratorios
+    "giro_360_s": 4.0,         # duración del giro automático 360° (teclas N/M)
     "ptz_velocidad": 40,       # grados/seg en vigilancia automática
     "canal_luces_1": 8,   # servo/relé par superior
     "canal_luces_2": 9,   # servo/relé par inferior
@@ -681,6 +687,7 @@ class App(tk.Tk):
         self.pod_ang_izq = 0.0      # ángulo pod izquierdo (0 = adelante)
         self.pod_ang_der = 0.0      # ángulo pod derecho (180 = atrás)
         self.pod_emp = 0.0          # empuje común de los pods (0..1)
+        self.giro360 = None         # 🔄 giro automático 360° (teclas N/M)
         try:
             self._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         except Exception:
@@ -1073,6 +1080,12 @@ class App(tk.Tk):
             self.log("🔓 ACTIVADO — motores habilitados (Enter)."
                      if self.activado else
                      "🔒 BLOQUEADO — presiona ENTER para habilitar los motores.")
+            return
+        if k in ("n", "m") and self.activado and not self.emergencia and not self.giro360:
+            self.giro360 = {"dir": -1.0 if k == "n" else 1.0,
+                            "t_fin": time.time() + self.cfg.get("giro_360_s", 4.0)}
+            self.log("🔄 GIRO 360° automático hacia la IZQUIERDA…"
+                     if k == "n" else "🔄 GIRO 360° automático hacia la DERECHA…")
             return
         if ev.keysym == "F1":
             self._emerg_parada()
@@ -1523,11 +1536,11 @@ class App(tk.Tk):
                            cx + hx[0] * s + 3, cz - hz[0] * s + 3,
                            fill="#58a6ff", outline="")
 
-        # pods laterales giratorios: flecha de empuje (pueden ir en sentidos opuestos)
+        # pods laterales giratorios: flecha de empuje en plano VERTICAL
         for s, ang_pod in ((1, self.pod_ang_izq), (-1, self.pod_ang_der)):
             hub = np.array([2.0, s * 56.0, -12.0])
             a = math.radians(ang_pod)
-            tip = hub + np.array([math.cos(a), math.sin(a), 0.0]) * 42.0
+            tip = hub + np.array([math.cos(a), 0.0, -math.sin(a)]) * 42.0
             hx, _, hz = self._proyectar(np.array([hub]))
             tx, _, tz = self._proyectar(np.array([tip]))
             cv.create_line(cx + hx[0] * s, cz - hz[0] * s,
@@ -1876,27 +1889,42 @@ class App(tk.Tk):
                     cmd = {"x": x, "y": y, "z": z, "r": r}
             else:
                 cmd = {"x": 0.0, "y": 0.0, "z": 0.0, "r": 0.0}
+
+            # giro automático 360° (N/M): timón a fondo hasta completar
+            if self.giro360:
+                cmd["r"] = self.giro360["dir"]
+                if time.time() > self.giro360["t_fin"]:
+                    self.giro360 = None
+                    cmd["r"] = 0.0
+                    self.log("🔄 GIRO 360° completado.")
             if self.link:
                 self.link.cmd = cmd
 
-            # pods laterales giratorios: laterales y PAR DE GIRO 360°
-            lat = cmd.get("y", 0.0)
-            yaw = cmd.get("r", 0.0)
-            fwd = max(0.0, cmd.get("x", 0.0)) * 0.3
-            if abs(yaw) > 0.12:
-                # girar en el sitio: un pod empuja adelante y el otro atrás
-                a_i = 0.0 if yaw > 0 else 180.0
-                a_d = 180.0 if yaw > 0 else 0.0
-                e_i = e_d = abs(yaw)
+            # pods giratorios en plano VERTICAL (pasos de 45° para estabilizar):
+            #   0 = recto (hélices mirando hacia atrás, empujan adelante)
+            # +90 = hélice hacia abajo → el sub SUBE · -90 = hélice arriba → BAJA
+            # 180 = hélice mirando adelante → RETROCESO (con los 4 de popa en reversa)
+            if self.giro360:
+                objetivo, e = 0.0, 0.0          # en el giro mandan los 4 de popa
             else:
-                a_i = a_d = -lat * 90.0
-                e_i = e_d = max(abs(lat), fwd)
-            self.pod_ang_izq, self.pod_ang_der = a_i, a_d
-            self.pod_emp = max(e_i, e_d)
+                mx, my, mz = (cmd.get("x", 0.0), cmd.get("y", 0.0),
+                              cmd.get("z", 0.0))
+                if mz > 0.15:                   # subir
+                    objetivo = 90.0
+                elif mz < -0.15:                # bajar
+                    objetivo = -90.0
+                elif mx <= -0.15:               # retroceso
+                    objetivo = 180.0
+                else:                           # recto
+                    objetivo = 0.0
+                objetivo = round(objetivo / 45.0) * 45.0    # pasos de 45°
+                e = max(abs(mx), abs(my), abs(mz))
+            self.pod_ang_izq = self.pod_ang_der = objetivo
+            self.pod_emp = e
             if self._sock and self.estado["conectado"]:
                 try:
                     self._sock.sendto(
-                        f"POD {a_i:.1f} {e_i:.2f} {a_d:.1f} {e_d:.2f}".encode("utf-8"),
+                        f"POD {objetivo:.1f} {e:.2f} {objetivo:.1f} {e:.2f}".encode("utf-8"),
                         (self.cfg["sub_ip"], self.cfg.get("pod_puerto_udp", 14552)))
                 except Exception:
                     pass
