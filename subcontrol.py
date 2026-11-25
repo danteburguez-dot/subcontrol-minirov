@@ -126,7 +126,7 @@ DEFAULT_CONFIG = {
     "canal_carrete": 14,      # motor carrete del hilo (recogida)
     "canal_luces_ptz": 15,    # anillos LED de las 3 cámaras domo PTZ
     "gimbal_rango_grados": 60,
-    "autoapuntado": True,
+    "autoapuntado": False,     # arranca OFF — se activa con Y al cazar
     "capacidad_wh": 180,  # 2× DeWalt DCB205 20V 5Ah (90 Wh c/u)
     "potencia_media_w": 120,
     "invertir_eje_z": False,
@@ -681,7 +681,7 @@ class App(tk.Tk):
         self.activado = False       # 🔒 bloqueo: ENTER para habilitar motores
         self.gimbal = {"yaw": 0.0, "pitch": 0.0}   # grados del gimbal del arpoón
         self.arpon_seguro = True
-        self.autoaim = bool(self.cfg.get("autoapuntado", True))
+        self.autoaim = False       # el autoapuntado SIEMPRE arranca apagado (tecla Y)
         self.objetivos = {"cam1": None, "cam3": None}  # objetivo CAM1 y CAM3
         self._bg = {"cam1": None, "cam3": None}        # fondo para detección
         self._fcount = 0
@@ -742,6 +742,7 @@ class App(tk.Tk):
         self.log(f"SUBCONTROL v{VERSION} iniciado. Mando: "
                  + ("detectado" if PYGAME_OK else "no disponible (sin pygame)"))
         self.log("🔒 BLOQUEADO: presiona ENTER (una vez) para habilitar los motores.")
+        self.log("Autoapuntado apagado — actívalo con Y cuando vayas a cazar.")
         if self.test:
             self.after(2500, self.destroy)
 
