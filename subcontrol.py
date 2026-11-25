@@ -1273,10 +1273,13 @@ class App(tk.Tk):
                        ((252, 10, -32), (264, 30, -12))):
             caja(p1, p2, BLANCO)
 
-        # ---- cámaras: punta (morro), abajo, y 3 domos PTZ con LED
-        caja((236, -12, 34), (256, 12, 52), GRIS_OSC)              # CAM1 base
-        caja((248, -10, 40), (260, 10, 58), CRISTAL2)             # domo CAM1
-        caja((56, -12, -60), (84, 12, -48), GRIS_OSC)             # CAM3 abajo
+        # ---- cámaras según tu diseño:
+        # 1 = punta del morro · 2 = arriba (cubierta) · 3 = bajo el arpoón
+        # (para apuntar el tiro) · 4 = izquierda · 5 = derecha
+        caja((244, -10, 24), (262, 10, 42), GRIS_OSC)              # CAM1 base
+        caja((262, -8, 26), (274, 8, 40), CRISTAL2)                # CAM1 domo en la PUNTA
+        caja((10, -11, -80), (40, 11, -68), GRIS_OSC)              # CAM3 bajo el arpoón
+        caja((40, -9, -78), (52, 9, -66), CRISTAL2)                # CAM3 domo (apunta al tiro)
         caja((118, -12, 46), (142, 12, 64), GRIS_OSC)             # CAM2 base (cubierta)
         caja((142, -10, 40), (154, 10, 62), CRISTAL2)             # cúpula CAM2
         for dx in (-8, 0, 8):                                      # LEDs CAM2
