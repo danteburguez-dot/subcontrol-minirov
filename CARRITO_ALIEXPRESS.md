@@ -38,13 +38,14 @@ más barata con buen vendedor (>95% valoración) y añade al carrito. Al final, 
 
 | Cant | Buscar | Precio | Subtotal |
 |---|---|---|---|
-| 5 | `USB camera module HD 720p mini` | $9 | $45 |
+| 2 | `ELP IMX291 USB camera module` (CAM1 punta + CAM3 abajo) | $18 | $36 |
+| 3 | `mini USB camera board 720p ELP` (para los 3 domos PTZ) | $9 | $27 |
 | 3 | `acrylic dome cover 50mm` (cúpulas PTZ) | $3 | $9 |
 | 3 | `LED ring light 12V white` (anillo domos) | $4 | $12 |
 | 3 | `servo 360 continuous rotation MG996R` | $6 | $18 |
 | 3 | `mosfet module 12V` (luces domos + pares) | $2 | $6 |
 
-**Subtotal cámaras: ≈ $90**
+**Subtotal cámaras: ≈ $108**
 
 ## Luces principales
 
@@ -108,7 +109,7 @@ más barata con buen vendedor (>95% valoración) y añade al carrito. Al final, 
 | Arpoón + pinza | $45.50 |
 | Energía (carga + protección) | $148 |
 | Casco + cableado | $88 |
-| **CARRITO ALIEXPRESS TOTAL** | **≈ $697** (+ envío combinado ~$15–30) |
+| **CARRITO ALIEXPRESS TOTAL** | **≈ $715** (+ envío combinado ~$15–30) |
 
 ### Fuera de AliExpress (compra aparte)
 
@@ -117,7 +118,7 @@ más barata con buen vendedor (>95% valoración) y añade al carrito. Al final, 
 | **DEWALT DCB205-2C** (2× batería 20V MAX 5Ah + cargador) | Home Depot / Lowe's / Amazon | $149 |
 | Tubo PVC 25 mm + codos + herrajes inox + espuma PU | ferretería local | ~$35 |
 | Herrajes/diversos (tornillería A4, tuercas, abrazaderas) | ferretería local | ~$15 |
-| **TOTAL REAL DEL PROYECTO** | | **≈ $895** |
+| **TOTAL REAL DEL PROYECTO** | | **≈ $915** |
 
 ### Notas del carrito
 

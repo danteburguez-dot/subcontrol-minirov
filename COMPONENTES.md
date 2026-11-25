@@ -95,14 +95,14 @@ Diseño autónomo: conectas cualquier batería (llena, a medio usar, incluso des
 
 | # | Componente | Specs | Precio |
 |---|---|---|---|
-| 24 | CAM1 Punta: cámara USB HD | en domo frontal | 18 |
-| 25 | CAM3 Abajo: cámara USB HD | mira la pinza (fija) | 15 |
-| 26 | CAM2 Arriba: **cámara domo PTZ** (USB + cúpula acrílica + anillo 6 LEDs blancos + servo 360°) | vigilancia con luz propia para oscuridad | 15 + 10 |
-| 27 | CAM4 Izquierda: **cámara domo PTZ** (igual) | vigilancia con luz propia | 15 + 10 |
-| 28 | CAM5 Derecha: **cámara domo PTZ** (igual) | vigilancia con luz propia | 15 + 10 |
+| 24 | CAM1 Punta: **ELP USB con sensor Sony IMX291 "Starvis"** + lente 170° | brilla en poca luz, video principal | 22 |
+| 25 | CAM3 Abajo: **ELP mini (IMX307/IMX291)** | mira la pinza con poca luz | 18 |
+| 26 | CAM2 Arriba: **domo PTZ** = módulo **ELP mini** + cúpula acrílica + anillo 6 LEDs blancos + servo 360° | vigilancia con luz propia para oscuridad | 15 + 10 |
+| 27 | CAM4 Izquierda: **domo PTZ** (igual) | vigilancia con luz propia | 15 + 10 |
+| 28 | CAM5 Derecha: **domo PTZ** (igual) | vigilancia con luz propia | 15 + 10 |
 | 29 | 3× soportes PTZ impresos | estancos con O-ring | 9 |
 
-**Subtotal cámaras: ≈ 126**
+**Subtotal cámaras: ≈ 124**
 
 ## 7. Luces (4 × 10 W a 90°)
 
