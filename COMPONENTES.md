@@ -144,6 +144,13 @@ Todos los precios aproximados (USD ≈ EUR). Los motores/servos van sellados seg
 - **Recomendada (~1.020):** todo lo de esta lista (la de este proyecto).
 - **Pro (~1.300):** Pi 5, cámaras de mayor luminosidad, lastre activo, 2° batería extra.
 
+### ⚡ Variante con baterías de 20 V (5S)
+- **20 V = 5 celdas**: LiPo 5S (18,5 V nominal / 21 V cargada) o **baterías de herramientas** DeWalt/Makita "20V MAX" (18 V nominal / 21 V cargada).
+- **Ventaja:** +20–25% de velocidad y empuje (los motores giran más rápido).
+- **Requisitos al comprar:** ESCs soportando 2–6S (≥25 V), reguladores 5 V/12 V de entrada ancha (hasta 36 V), cargador de balanceo 5S — o simplemente el cargador de tu marca de herramientas.
+- **Atajo económico:** si ya tienes herramientas de 20 V, compra 2 adaptadores XT60 para pack de herramienta (~10 c/u) y usa esas baterías → ahorras ~120 USD.
+- El resto del sistema (diodo-ideal ORing, INA219, app) funciona sin cambios; ajusta `capacidad_wh` en `subcontrol_config.json` (5S 10 Ah ≈ 185 Wh; pack herramienta 5 Ah ≈ 100 Wh).
+
 ### Herramientas necesarias (si no tienes)
 Soldador + estaño, pistola de silicona/epoxi, impresión 3D (o servicio ~30), taladro, multímetro: **≈ 80–150** (inversión única).
 

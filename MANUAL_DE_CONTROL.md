@@ -123,7 +123,7 @@ Puedes hacerlo a mano siempre: `G`/`H` para la pinza y los sticks para acercarte
 
 - El sub lleva **2 baterías LiPo 4S conectadas por módulos diodo-ideal**: la que tiene más voltaje alimenta todo el sistema y, cuando una se agota, **la otra toma el control en microsegundos — sin corte de energía**.
 - En la app verás el estado de la batería en uso; con los sensores INA219 instalados, se pueden mostrar las dos por separado (Bat A / Bat B).
-- **Carga:** abre el hatch, desconecta ambas XT60 y carga con el cargador de balanceo 4S (primero A, luego B, o las dos a la vez con placa paralela si tienen voltajes parecidos).
+- **Carga:** abre el hatch, desconecta ambas XT60 y carga con el cargador de balanceo 4S (primero A, luego B, o las dos a la vez con placa paralela si tienen voltajes parecidos). Si son baterías de 20 V (5S o de herramientas), el cargador debe ser 5S o el de tu marca de herramientas.
 - Carga **nunca** dentro del sub ni en ambiente húmedo; siempre supervisada.
 - Si no vas a usar el sub en días: guarda las baterías al 50% (3,8 V/celda) en bolsas LiPo-safe.
 
