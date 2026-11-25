@@ -119,11 +119,13 @@ Puedes hacerlo a mano siempre: `G`/`H` para la pinza y los sticks para acercarte
 - **F3 — NORMALIZAR:** cancela la emergencia.
 - El cable de 20 m también sirve para **halvar el sub a mano** en rescate.
 
-## 10. Baterías intercambiables
+## 10. Doble batería con cambio automático
 
-- Hatch popero de liberación rápida: sacas la batería agotada y encajas la de repuesto (30 s).
-- 2 baterías alternadas: una bucea, la otra carga.
-- Carga LiPo siempre supervisada, guarda al 50%.
+- El sub lleva **2 baterías LiPo 4S conectadas por módulos diodo-ideal**: la que tiene más voltaje alimenta todo el sistema y, cuando una se agota, **la otra toma el control en microsegundos — sin corte de energía**.
+- En la app verás el estado de la batería en uso; con los sensores INA219 instalados, se pueden mostrar las dos por separado (Bat A / Bat B).
+- **Carga:** abre el hatch, desconecta ambas XT60 y carga con el cargador de balanceo 4S (primero A, luego B, o las dos a la vez con placa paralela si tienen voltajes parecidos).
+- Carga **nunca** dentro del sub ni en ambiente húmedo; siempre supervisada.
+- Si no vas a usar el sub en días: guarda las baterías al 50% (3,8 V/celda) en bolsas LiPo-safe.
 
 ## 11. Seguridad
 

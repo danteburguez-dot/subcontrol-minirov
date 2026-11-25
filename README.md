@@ -14,7 +14,7 @@ Estación de control en PC para un mini-submarino teledirigido por cable de 20 m
 - **Modelo 3D en la pantalla** en todo momento, con **hélices girando según el empuje real**
 - Telemetría: profundidad, rumbo, batería (%/V/min restantes), modo y armado
 - **Sistema de emergencia**: parada (F1), subida a superficie (F2), normalizar (F3)
-- **Baterías intercambiables** en bahía de liberación rápida
+- **Doble batería LiPo con conmutación automática** (diodo-ideal): si una se agota, la otra toma el control sin corte
 - Control por **teclado y mando** (Xbox/PS4)
 - MODO DEMO integrado: prueba toda la app sin el submarino conectado
 

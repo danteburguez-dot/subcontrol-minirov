@@ -39,16 +39,18 @@ Todos los precios aproximados (USD ≈ EUR). Los motores/servos van sellados seg
 
 **Subtotal propulsión: ≈ 239**
 
-## 4. Energía (baterías intercambiables)
+## 4. Energía — doble batería con conmutación automática
 
 | # | Componente | Specs | Precio |
 |---|---|---|---|
-| 15 | 2× batería LiPo 4S 10 Ah | con plug XT60 rápido | 2 × 55 = 110 |
-| 16 | Cargador de balanceo 4S | + fuente | 35 |
-| 17 | Bahía de cambio rápido | hatch + XT60 panel | 12 |
-| 18 | Regulador 5 V/12 V + fusibles | para Pi, luces, servos | 12 |
+| 15 | 2× batería LiPo 4S 10 Ah | plug XT60, marca certificada | 2 × 55 = 110 |
+| 16 | 2× módulo diodo-ideal ORing 60 A | cambio automático sin corte (LTC4357) | 2 × 12 = 24 |
+| 17 | 2× sensor INA219 | miden V/A de cada batería (I2C → app) | 2 × 4 = 8 |
+| 18 | Cargador de balanceo 4S + fuente | carga A y B (o paraboard para ambas) | 35 |
+| 19 | Regulador 5 V/12 V + fusibles | para Pi, luces, servos | 12 |
+| 20 | Bolsas LiPo-safe ×2 + hatch | guardado y extracción | 12 |
 
-**Subtotal energía: ≈ 169**
+**Subtotal energía: ≈ 201**
 
 ## 5. Electrónica central
 
@@ -128,18 +130,18 @@ Todos los precios aproximados (USD ≈ EUR). Los motores/servos van sellados seg
 | Casco presurizado | ~115 |
 | Frame + flotabilidad | ~40 |
 | 6 motores + ESCs | ~239 |
-| Energía (2 baterías + cargador) | ~169 |
+| Energía (2 baterías + conmutación auto + cargador) | ~201 |
 | Electrónica central | ~118 |
 | 5 cámaras (3 PTZ) | ~105 |
 | 4 luces 10 W | ~56 |
 | Arpoón + hilo + gimbal | ~78 |
 | Pinza reforzada | ~24 |
 | Tether + consola | ~45 |
-| **TOTAL** | **≈ 990 USD** (890–1.100 según proveedor y envío) |
+| **TOTAL** | **≈ 1.020 USD** (900–1.150 según proveedor y envío) |
 
 ### Versiones ajustadas
-- **Económica (~650):** 4 motores en vez de 6, 3 cámaras (1 PTZ), luces 2 × 10 W.
-- **Recomendada (~990):** todo lo de esta lista (la de este proyecto).
+- **Económica (~700):** 4 motores en vez de 6, 3 cámaras (1 PTZ), luces 2 × 10 W, 1 sola batería.
+- **Recomendada (~1.020):** todo lo de esta lista (la de este proyecto).
 - **Pro (~1.300):** Pi 5, cámaras de mayor luminosidad, lastre activo, 2° batería extra.
 
 ### Herramientas necesarias (si no tienes)
