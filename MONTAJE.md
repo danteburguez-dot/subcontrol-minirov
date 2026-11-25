@@ -68,9 +68,10 @@ que el servo gira el pod completo con suave paso.
    2 travesaños de 30 cm (según medidas del modelo 3D).
 2. Pégalos con codo/PVC cemento siguiendo la plantilla del `modelo3d.scad`.
 3. Motores: los **4 horizontales en la placa de popa** (en 2×2, y = ±42,
-   z = −14 y +16 — máximo empuje hacia adelante), los **2 verticales como
-   torretas en cubierta** (x = ±150) y los **2 pods laterales giratorios** en
-   los costados (servo sumergible DS3218 + anillo deslizante de 6 hilos).
+   z = −14 y +16 — máximo empuje hacia adelante), los **2 verticales a los
+   costados del casco** (uno por banda, y = ±50, a media altura) y los
+   **2 pods laterales giratorios** en los costados (servo sumergible DS3218 +
+   anillo deslizante de 6 hilos).
 4. Coloca el casco en el centro con abrazaderas acolchadas.
 
 ---

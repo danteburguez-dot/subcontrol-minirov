@@ -1188,7 +1188,7 @@ class App(tk.Tk):
     # ------------------------------------------- modelo 3D en vivo
     PROPS = [((-214, 42, -14), "x", 1), ((-214, -42, -14), "x", -1),
              ((-214, 42, 16), "x", -1), ((-214, -42, 16), "x", 1),
-             ((150, 0, 100), "z", 1), ((-150, 0, 100), "z", -1)]
+             ((22, 56, 13), "z", 1), ((22, -56, 13), "z", -1)]
 
     def _geo_rov(self):
         """Silueta de submarino real (loft de anillos) + todos los mecanismos."""
@@ -1231,9 +1231,10 @@ class App(tk.Tk):
         for yy, zz in ((42, -14), (-42, -14), (42, 16), (-42, 16)):
             caja((-196, yy - 16, zz - 14), (-174, yy + 16, zz + 14), GRIS_OSC)  # pod
             caja((-212, yy - 17, zz - 15), (-198, yy + 17, zz + 15), GRIS)      # tobera
-        # ---- 2 verticales como torretas en cubierta
-        for xx in (150, -150):
-            caja((xx - 22, -16, 46), (xx + 22, 16, 96), GRIS_OSC)
+        # ---- 2 verticales a los costados (uno por banda, a media altura)
+        for s in (1, -1):
+            caja((-2, s * 50, 4), (10, s * 58, 22), GRIS)              # soporte
+            caja((8, s * 50, 2), (36, s * 62, 24), GRIS_OSC)           # túnel vertical
 
         # ---- arpoón bajo el morro: gimbal + cañón + punta
         caja((0, -20, -74), (70, 20, -48), GRIS_OSC)
@@ -1261,10 +1262,10 @@ class App(tk.Tk):
         for dx in (-8, 0, 8):                                      # LEDs CAM2
             caja((126 + dx - 3, -4, 46), (126 + dx + 3, 4, 52), BLANCO)
         for s in (1, -1):                                          # CAM4/CAM5
-            caja((-8, s * 48, 6), (8, s * 60, 28), GRIS_OSC)
-            caja((6, s * 50, 8), (18, s * 60, 26), CRISTAL2)
+            caja((55, s * 48, 6), (77, s * 60, 28), GRIS_OSC)
+            caja((77, s * 50, 8), (89, s * 60, 26), CRISTAL2)
             for dz in (10, 16, 22):                                # LEDs c/u
-                caja((-6, s * 54, dz - 3), (0, s * 60, dz + 3), BLANCO)
+                caja((46, s * 54, dz - 3), (52, s * 60, dz + 3), BLANCO)
 
         # ---- 2 pods laterales giratorios (pod entero sobre servo IP67)
         for s in (1, -1):
@@ -1521,7 +1522,7 @@ class App(tk.Tk):
                            fill="#c9d1d9", outline="#5a6069")  # buje
 
         # cámaras PTZ: flecha de vista que gira 360° en el modelo
-        campos_ptz = {1: (132, 0, 66), 3: (0, 58, 18), 4: (0, -58, 18)}
+        campos_ptz = {1: (132, 0, 66), 3: (66, 58, 18), 4: (66, -58, 18)}
         for i, ang_cam in self.ptz.items():
             if i not in campos_ptz:
                 continue
