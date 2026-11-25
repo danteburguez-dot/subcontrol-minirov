@@ -652,6 +652,7 @@ class App(tk.Tk):
         self.luces_ptz = False     # anillos LED de los domos PTZ
         self.pinza = 0
         self.emergencia = None
+        self.activado = False       # 🔒 bloqueo: ENTER para habilitar motores
         self.gimbal = {"yaw": 0.0, "pitch": 0.0}   # grados del gimbal del arpoón
         self.arpon_seguro = True
         self.autoaim = bool(self.cfg.get("autoapuntado", True))
@@ -710,6 +711,7 @@ class App(tk.Tk):
 
         self.log(f"SUBCONTROL v{VERSION} iniciado. Mando: "
                  + ("detectado" if PYGAME_OK else "no disponible (sin pygame)"))
+        self.log("🔒 BLOQUEADO: presiona ENTER (una vez) para habilitar los motores.")
         if self.test:
             self.after(2500, self.destroy)
 
@@ -744,6 +746,10 @@ class App(tk.Tk):
         self.lbl_modo = tk.Label(head, text="Modo: —   |   DESARMADO", bg=COL_PANEL,
                                  fg=COL_AMBAR, font=("Segoe UI", 11, "bold"))
         self.lbl_modo.pack(side="right", padx=14)
+        self.lbl_gate = tk.Label(head, text="🔒 BLOQUEADO · ENTER para activar",
+                                 bg=COL_PANEL, fg=COL_ROJO,
+                                 font=("Segoe UI", 11, "bold"))
+        self.lbl_gate.pack(side="right", padx=6)
 
         # ---- Cuerpo
         body = tk.Frame(self, bg=COL_FONDO)
@@ -1055,6 +1061,12 @@ class App(tk.Tk):
 
     def _tecla_pulsada(self, ev):
         k = ev.keysym.lower()
+        if ev.keysym in ("Return", "KP_Enter"):
+            self.activado = not self.activado
+            self.log("🔓 ACTIVADO — motores habilitados (Enter)."
+                     if self.activado else
+                     "🔒 BLOQUEADO — presiona ENTER para habilitar los motores.")
+            return
         if ev.keysym == "F1":
             self._emerg_parada()
         elif ev.keysym == "F2":
@@ -1092,10 +1104,11 @@ class App(tk.Tk):
         self.emergencia = "stop"
         self.teclas.clear()
         self.arpon_seguro = True
+        self.activado = False
         if self.link:
             self.link.emergencia = "stop"
             self.link.aux["carrete"] = 1500
-        self.log("⛔ PARADA DE EMERGENCIA — motores a cero, arpoón en seguro, desarme.")
+        self.log("⛔ PARADA DE EMERGENCIA — motores a cero, arpoón en seguro, desarme. BLOQUEADO (ENTER para reactivar).")
 
     def _emerg_subida(self):
         self.emergencia = "subida"
@@ -1106,9 +1119,10 @@ class App(tk.Tk):
     def _emerg_normalizar(self):
         if self.emergencia:
             self.emergencia = None
+            self.activado = False
             if self.link:
                 self.link.emergencia = None
-            self.log("Normalizar: sin emergencia activa.")
+            self.log("Normalizar: sin emergencia activa. BLOQUEADO (ENTER para reactivar).")
 
     def _toggle_luces(self, i):
         self.luces[i] = not self.luces[i]
@@ -1673,6 +1687,10 @@ class App(tk.Tk):
         else:
             self.lbl_estado.configure(text="MODO DEMO (sin submarino)", fg=COL_AMBAR)
         armado = self.estado["armado"]
+        if self.activado:
+            self.lbl_gate.configure(text="🔓 ACTIVADO · (Enter = bloquear)", fg=COL_VERDE)
+        else:
+            self.lbl_gate.configure(text="🔒 BLOQUEADO · ENTER para activar", fg=COL_ROJO)
         self.lbl_modo.configure(
             text=f"Modo: {self.estado['modo']}   |   {'🔴 ARMADO' if armado else 'DESARMADO'}",
             fg=COL_ROJO if armado else COL_AMBAR)
@@ -1787,17 +1805,23 @@ class App(tk.Tk):
 
         if self.emergencia == "subida":
             # sube a superficie solo (pico instantáneo) y PUEDES dirigir al instante
+            gx = x if self.activado else 0.0
+            gy = y if self.activado else 0.0
+            gr = r if self.activado else 0.0
             if self.link:
                 self.link.emergencia = "subida"
-                self.link.cmd = {"x": x, "y": y, "z": 0.0, "r": r}
+                self.link.cmd = {"x": gx, "y": gy, "z": 0.0, "r": gr}
         elif self.emergencia == "stop":
             if self.link:
                 self.link.emergencia = "stop"
         else:
-            if self.auto_gancho:
-                cmd = self._steer_gancho(not self.estado["conectado"])
+            if self.activado:
+                if self.auto_gancho:
+                    cmd = self._steer_gancho(not self.estado["conectado"])
+                else:
+                    cmd = {"x": x, "y": y, "z": z, "r": r}
             else:
-                cmd = {"x": x, "y": y, "z": z, "r": r}
+                cmd = {"x": 0.0, "y": 0.0, "z": 0.0, "r": 0.0}
             if self.link:
                 self.link.cmd = cmd
 
@@ -1812,7 +1836,9 @@ class App(tk.Tk):
                 p = 1
             else:
                 p = 0
-            if time.time() < self._gancho_cierre_hasta:
+            if not self.activado:
+                p = 0
+            if time.time() < self._gancho_cierre_hasta and self.activado:
                 p = -1
             self.pinza = p
             if self.link:

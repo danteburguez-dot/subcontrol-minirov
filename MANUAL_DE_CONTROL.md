@@ -14,6 +14,9 @@ pinza reforzada · sensor de golpes · modelo 3D en vivo.
 4. Abre `SubControl.exe`. El punto de estado dirá:
    - 🟢 **CONECTADO** → enlace con el sub activo.
    - 🟠 **MODO DEMO** → sin sub conectado (puedes practicar todo igual).
+5. **Presiona ENTER para ACTIVAR los motores** — la app arranca BLOQUEADA (🔒): hasta
+   que presiones Enter no responden W/A/S/D ni la pinza. Tras cualquier emergencia,
+   vuelve a bloquearse y hay que presionar Enter de nuevo.
 
 ## 2. Control por TECLADO
 
