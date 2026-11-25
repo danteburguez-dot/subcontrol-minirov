@@ -46,8 +46,8 @@ las pruebas**: cada fase termina con un test obligatorio.
    (los bobinados aguantan aceite; compensa con un tubito de respiración).
 4. Cable de 3 hilos del motor (AwG16) soldado al **ESC Readytosky 40A 2–6S OPTO**
    (configurado ANTES en BLHeliSuite32: **modo 3D/reversa**, y encapsulado en epoxi).
-5. Marca cada motor: **PL1, PL2 (popa-izq), PR1, PR2 (popa-der), VS, VC (verticales)
-   y PI, PD (pods laterales)**.
+5. Marca cada motor: **PL1, PL2 (popa-izq), PR1, PR2 (popa-der), LI, LD
+   (laterales, hélices hacia atrás) y PI, PD (pods giratorios)**.
 6. Sella las 8 uniones ESC–tubo con silicona neutra.
 7. **Los 2 pods laterales giratorios (PI/PD):** el tubo sellado del motor va
    montado sobre un **servo sumergible DS3218 (IP67)** orientado para que el pod
@@ -68,10 +68,11 @@ que el servo gira el pod completo con suave paso.
    2 travesaños de 30 cm (según medidas del modelo 3D).
 2. Pégalos con codo/PVC cemento siguiendo la plantilla del `modelo3d.scad`.
 3. Motores: los **4 horizontales en la placa de popa** (en 2×2, y = ±42,
-   z = −14 y +16 — máximo empuje hacia adelante), los **2 verticales a los
-   costados del casco** (uno por banda, y = ±50, a media altura) y los
+   z = −14 y +16 — máximo empuje hacia adelante), los **2 horizontales
+   laterales** (hélices mirando hacia atrás, y = ±50, a media altura) y los
    **2 pods laterales giratorios** en los costados (servo sumergible DS3218 +
-   anillo deslizante de 6 hilos).
+   anillo deslizante de 6 hilos). **Nota:** la subida/bajada la hacen los pods
+   (ArduSub se configura sin motores verticales).
 4. Coloca el casco en el centro con abrazaderas acolchadas.
 
 ---

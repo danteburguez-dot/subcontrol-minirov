@@ -1,7 +1,7 @@
 # 📖 MANUAL DE CONTROL — SUBCONTROL v1.0
 
 Manual completo para pilotar el mini-ROV desde tu computadora.
-El sub: 8 motores (4 en popa + 2 verticales + 2 pods laterales giratorios) ·
+El sub: 8 motores (4 en popa + 2 laterales + 2 pods giratorios que suben/bajan) ·
 5 cámaras (3 con giro 360°) · 4 luces 10 W · arpoón con hilo ·
 pinza reforzada · sensor de golpes · modelo 3D en vivo.
 

@@ -413,6 +413,15 @@ class SubLink(threading.Thread):
             self.aplicado = {"x": 0.0, "y": 0.0, "z": 0.0, "r": 0.0}
             self.aux["arpon"] = 1000
             self.aux["carrete"] = 1500
+            self.pod_ang_izq = self.pod_ang_der = 0.0
+            self.pod_emp = 0.0
+            if self._sock:
+                try:
+                    self._sock.sendto(b"POD 0.0 0.00 0.0 0.00",
+                                      (self.cfg["sub_ip"],
+                                       self.cfg.get("pod_puerto_udp", 14552)))
+                except Exception:
+                    pass
             if self._disarm_pend:
                 try:
                     self.master.arducopter_disarm()
@@ -440,6 +449,16 @@ class SubLink(threading.Thread):
             self.aux["arpon"] = 1000
             self.aux["carrete"] = 1500
             self._enviar_aux(ahora)
+            # subir la hacen los pods giratorios: hélices hacia abajo, a fondo
+            self.pod_ang_izq = self.pod_ang_der = 90.0
+            self.pod_emp = 1.0
+            if self._sock:
+                try:
+                    self._sock.sendto(b"POD 90.0 1.00 90.0 1.00",
+                                      (self.cfg["sub_ip"],
+                                       self.cfg.get("pod_puerto_udp", 14552)))
+                except Exception:
+                    pass
             limite = self.cfg.get("tiempo_subida_emergencia_s", 90)
             if self.estado["profundidad"] < 0.3 or ahora - self._t_emerg_ini > limite:
                 self.emergencia = None
@@ -748,7 +767,7 @@ class App(tk.Tk):
         tk.Label(head, text="SUBCONTROL", bg=COL_PANEL, fg=COL_ACENTO,
                  font=("Segoe UI", 16, "bold")).pack(side="left", padx=14, pady=8)
         tk.Label(head, text="Estación de superficie · mini-ROV 8 motores "
-                            "(4 en popa + 2 verticales + 2 pods laterales)",
+                            "(4 en popa + 2 laterales + 2 pods giratorios)",
                  bg=COL_PANEL, fg=COL_TEXTO).pack(side="left", padx=4)
         self.dot = tk.Canvas(head, width=16, height=16, bg=COL_PANEL, highlightthickness=0)
         self.dot_id = self.dot.create_oval(2, 2, 14, 14, fill="#555", outline="")
@@ -1188,7 +1207,7 @@ class App(tk.Tk):
     # ------------------------------------------- modelo 3D en vivo
     PROPS = [((-214, 42, -14), "x", 1), ((-214, -42, -14), "x", -1),
              ((-214, 42, 16), "x", -1), ((-214, -42, 16), "x", 1),
-             ((22, 56, 13), "z", 1), ((22, -56, 13), "z", -1)]
+             ((40, 56, 0), "x", 1), ((40, -56, 0), "x", -1)]
 
     def _geo_rov(self):
         """Silueta de submarino real (loft de anillos) + todos los mecanismos."""
@@ -1231,10 +1250,11 @@ class App(tk.Tk):
         for yy, zz in ((42, -14), (-42, -14), (42, 16), (-42, 16)):
             caja((-196, yy - 16, zz - 14), (-174, yy + 16, zz + 14), GRIS_OSC)  # pod
             caja((-212, yy - 17, zz - 15), (-198, yy + 17, zz + 15), GRIS)      # tobera
-        # ---- 2 verticales a los costados (uno por banda, a media altura)
+        # ---- 2 motores horizontales a los costados (hélices mirando hacia atrás)
         for s in (1, -1):
-            caja((-2, s * 50, 4), (10, s * 58, 22), GRIS)              # soporte
-            caja((8, s * 50, 2), (36, s * 62, 24), GRIS_OSC)           # túnel vertical
+            caja((-2, s * 50, -10), (10, s * 58, 10), GRIS)            # soporte
+            caja((8, s * 50, -14), (36, s * 62, 14), GRIS_OSC)         # pod
+            caja((30, s * 52, -12), (38, s * 60, 12), GRIS)            # tobera atrás
 
         # ---- arpoón bajo el morro: gimbal + cañón + punta
         caja((0, -20, -74), (70, 20, -48), GRIS_OSC)

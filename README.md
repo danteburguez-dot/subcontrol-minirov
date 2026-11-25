@@ -2,7 +2,7 @@
 
 Estación de control en PC para un mini-submarino teledirigido por cable de 20 m:
 
-- **8 motores** sellados: 4 en popa (máximo empuje) + 2 verticales a los costados + **2 pods laterales giratorios** sobre servos sumergibles
+- **8 motores** sellados: 4 en popa + 2 laterales (hélices mirando atrás) + **2 pods giratorios** que hacen subir/bajar y el retroceso fino
 - **5 cámaras** (punta, arriba, abajo, izquierda, derecha) — **3 domos PTZ 360°** con luz propia (anillo LED) para vigilar en la oscuridad
 - Vista tipo videollamada: cámara principal + miniaturas (clic para cambiar)
 - **4 luces LED de 10 W** (cada 90°) controladas por parejas
