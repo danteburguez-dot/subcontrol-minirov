@@ -81,6 +81,7 @@ pinza reforzada · sensor de golpes · modelo 3D en vivo.
 ## 5. Modelo 3D en vivo (debajo de la cámara principal)
 
 - Muestra el submarino completo en todo momento: casco, 6 motores, aletas, luces, arpoón, pinza y batería.
+- **Gira en vivo con el rumbo real**: cuando presionas `←→` (o el sub real gira), el modelo rota como una brújula.
 - **Las 6 hélices giran según el empuje real** que estás mandando (más throttle = giro más rápido).
 - **Arrastra** con el ratón para girar la vista, **rueda** para zoom, **doble clic** para reset.
 - **Sensor de golpes:** la IMU del sub detecta impactos por encima del umbral (3 g). Al recibir un golpe:

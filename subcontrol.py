@@ -124,6 +124,7 @@ DEFAULT_CONFIG = {
     "potencia_media_w": 120,
     "invertir_eje_z": False,
     "escala_movimiento": 800,
+    "a_d_girar": False,        # true = A/D giran (estilo auto) y ←/→ mueven de lado
     "rampa_empuje": 1.2,       # sube/baja el empuje de a poco (0→1 en ~1 s)
     "tiempo_subida_emergencia_s": 90,
     "umbral_golpe_g": 3.0,     # aceleración (g) que cuenta como golpe
@@ -656,6 +657,7 @@ class App(tk.Tk):
         self.impacto = None         # {"lado":…, "g":…, "t":…}
         self.vista3d = {"yaw": 35.0, "pitch": 18.0, "zoom": 0.34}
         self._drag = None
+        self._rumbo_prev = None   # para rotar el modelo 3D con el rumbo real
         self._prop_ang = 0.0
         self.ptz = {}               # índice de cámara → ángulo 0-360°
         for i, c in enumerate(self.cfg["camaras"]):
@@ -959,6 +961,10 @@ class App(tk.Tk):
                                  font=("Segoe UI", 10, "bold"),
                                  command=self._toggle_arm)
         self.btn_arm.pack(fill="x", padx=10, pady=(0, 4))
+        self.var_adg = tk.BooleanVar(value=bool(self.cfg.get("a_d_girar", False)))
+        ttk.Checkbutton(s, text="A/D giran (estilo auto) en vez de mover de lado",
+                        variable=self.var_adg,
+                        command=self._toggle_adg).pack(fill="x", padx=10, pady=(0, 2))
         tk.Label(s, text="TECLADO: W/S adelante · A/D lateral · E/Q vertical · ←→ girar\n"
                          "MANDO: sticks izq/der · A/B luces · X/Y pinza · LB/RB emergencia",
                  bg=COL_PANEL, fg="#8b949e", font=("Consolas", 8), justify="left"
@@ -1190,6 +1196,14 @@ class App(tk.Tk):
                                    h / max(1.0, self._ext3d[2])) * 0.78))
             s = self.vista3d["zoom"]
             self._fit3d = True
+        # rotación en vivo: el modelo gira según el rumbo real del submarino
+        rumbo = self.estado["rumbo"]
+        if self._rumbo_prev is None:
+            self._rumbo_prev = rumbo
+        delta = (rumbo - self._rumbo_prev + 180.0) % 360.0 - 180.0
+        if abs(delta) > 0.01:
+            self.vista3d["yaw"] -= delta
+            self._rumbo_prev = rumbo
         ahora = time.time()
         golpe_act = self.impacto is not None and ahora - self.impacto["t"] < 3.0
         flash = int(ahora * 6) % 2 == 0
@@ -1389,6 +1403,13 @@ class App(tk.Tk):
         else:
             self.log("(demo) ARMAR/DESARMAR solo con submarino conectado.")
 
+    def _toggle_adg(self):
+        self.cfg["a_d_girar"] = bool(self.var_adg.get())
+        guardar_config(self.cfg)
+        modo = "A/D GIRAN (estilo auto) y ←/→ mueven de lado" if self.cfg["a_d_girar"] \
+            else "A/D mueven de lado y ←/→ giran"
+        self.log(f"Controles: {modo}")
+
     def _modo_sel(self, ev=None):
         if self.estado["conectado"]:
             self.link.fijar_modo(self.cb_modo.get())
@@ -1557,9 +1578,16 @@ class App(tk.Tk):
 
         # combinar teclado + mando (válido también durante emergencia subida)
         tx = (1 if "w" in self.teclas else 0) - (1 if "s" in self.teclas else 0)
-        ty = (1 if "d" in self.teclas else 0) - (1 if "a" in self.teclas else 0)
         tz = (1 if "e" in self.teclas else 0) - (1 if "q" in self.teclas else 0)
-        tr = (1 if "Right" in self.teclas else 0) - (1 if "Left" in self.teclas else 0)
+        if self.cfg.get("a_d_girar"):
+            # estilo auto: A/D giran, flechas mueven de lado
+            tr = limitar((1 if "d" in self.teclas else 0) -
+                         (1 if "a" in self.teclas else 0))
+            ty = limitar((1 if "Right" in self.teclas else 0) -
+                         (1 if "Left" in self.teclas else 0))
+        else:
+            ty = (1 if "d" in self.teclas else 0) - (1 if "a" in self.teclas else 0)
+            tr = (1 if "Right" in self.teclas else 0) - (1 if "Left" in self.teclas else 0)
         x = limitar(tx + self.mando_ejes["x"])
         y = limitar(ty + self.mando_ejes["y"])
         z = limitar(tz + self.mando_ejes["z"])
