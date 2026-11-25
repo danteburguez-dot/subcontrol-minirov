@@ -43,7 +43,7 @@ pinza reforzada · sensor de golpes · modelo 3D en vivo.
 | `F3` | Normalizar emergencia |
 
 > Los controles funcionan cuando la ventana de SUBCONTROL tiene el foco.
-> El **empuje sube y baja de a poco** (~1 s de rampa) para cuidar baterías y ESCs; en emergencias la potencia es inmediata.
+> El **empuje sube y baja de a poco** (~1 s de rampa) para cuidar baterías y ESCs; **al dar reversa el cambio es instantáneo** y el freno es 4× más rápido. **En emergencias no hay rampa**: los motores van directo al pico y puedes seguir dirigiendo mientras sube (F2).
 
 ## 3. Control por MANDO (Xbox / PS4)
 

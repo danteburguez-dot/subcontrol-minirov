@@ -395,6 +395,7 @@ class SubLink(threading.Thread):
 
         if self.emergencia == "stop":
             self._enviar_manual(0, 0, 0, 0)
+            self.aplicado = {"x": 0.0, "y": 0.0, "z": 0.0, "r": 0.0}
             self.aux["arpon"] = 1000
             self.aux["carrete"] = 1500
             if self._disarm_pend:
@@ -412,8 +413,12 @@ class SubLink(threading.Thread):
             return
 
         if self.emergencia == "subida":
+            # POTENCIA INSTANTÁNEA (sin rampa): los motores van directo al pico
             dz = 1.0 if not self.cfg.get("invertir_eje_z") else -1.0
-            self._enviar_manual(0, 0, dz, 0)
+            u = self.cmd
+            esc = self.cfg.get("escala_movimiento", 800)
+            self._enviar_manual(u["x"] * esc, u["y"] * esc, dz, u["r"] * esc)
+            self.aplicado = {"x": u["x"], "y": u["y"], "z": dz, "r": u["r"]}
             self.aux["luces1"] = True
             self.aux["luces2"] = True
             self.aux["pinza"] = 1
@@ -439,9 +444,15 @@ class SubLink(threading.Thread):
             dif = c[k] - a[k]
             if dif == 0.0:
                 continue
+            # REVERSA instantánea: si cambia el sentido, respuesta inmediata
+            if a[k] * c[k] < 0:
+                a[k] = c[k]
+                continue
             paso = max(-tasa, min(tasa, dif))
-            if abs(c[k]) < abs(a[k]):          # frenar es más rápido (×2)
-                paso *= 2.0
+            if c[k] == 0.0:
+                paso = max(-tasa * 4.0, min(tasa * 4.0, dif))   # FRENO rápido
+            elif abs(c[k]) < abs(a[k]):
+                paso *= 2.0                                     # soltar: 2×
                 if abs(paso) > abs(dif):
                     paso = dif
             a[k] += paso
@@ -1544,22 +1555,25 @@ class App(tk.Tk):
             self.mando_prev = list(b)
             self.mando_ejes = dict(e)
 
+        # combinar teclado + mando (válido también durante emergencia subida)
+        tx = (1 if "w" in self.teclas else 0) - (1 if "s" in self.teclas else 0)
+        ty = (1 if "d" in self.teclas else 0) - (1 if "a" in self.teclas else 0)
+        tz = (1 if "e" in self.teclas else 0) - (1 if "q" in self.teclas else 0)
+        tr = (1 if "Right" in self.teclas else 0) - (1 if "Left" in self.teclas else 0)
+        x = limitar(tx + self.mando_ejes["x"])
+        y = limitar(ty + self.mando_ejes["y"])
+        z = limitar(tz + self.mando_ejes["z"])
+        r = limitar(tr + self.mando_ejes["r"])
+
         if self.emergencia == "subida":
+            # sube a superficie solo (pico instantáneo) y PUEDES dirigir al instante
             if self.link:
                 self.link.emergencia = "subida"
+                self.link.cmd = {"x": x, "y": y, "z": 0.0, "r": r}
         elif self.emergencia == "stop":
             if self.link:
                 self.link.emergencia = "stop"
         else:
-            # combinar teclado + mando
-            tx = (1 if "w" in self.teclas else 0) - (1 if "s" in self.teclas else 0)
-            ty = (1 if "d" in self.teclas else 0) - (1 if "a" in self.teclas else 0)
-            tz = (1 if "e" in self.teclas else 0) - (1 if "q" in self.teclas else 0)
-            tr = (1 if "Right" in self.teclas else 0) - (1 if "Left" in self.teclas else 0)
-            x = limitar(tx + self.mando_ejes["x"])
-            y = limitar(ty + self.mando_ejes["y"])
-            z = limitar(tz + self.mando_ejes["z"])
-            r = limitar(tr + self.mando_ejes["r"])
             if self.auto_gancho:
                 cmd = self._steer_gancho(not self.estado["conectado"])
             else:
