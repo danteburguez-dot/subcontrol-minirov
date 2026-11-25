@@ -60,14 +60,15 @@ python -m PyInstaller --onefile --noconsole --clean --name SubControl ^
 
 ```
 SubControl/
+├── SubControl.exe           # ▶ EL EJECUTABLE — doble clic para abrir la app
 ├── subcontrol.py            # Aplicación de control (fuente principal)
 ├── companero_ptz.py         # Script para la Raspberry Pi: servos PTZ 360°
 ├── companero_carga.py       # Script para la Pi: indicador de carga con las luces
 ├── requirements.txt         # Dependencias
-├── build.bat                # Compila el .exe
+├── build.bat                # Compila el .exe (lo deja en la raíz del proyecto)
 ├── MANUAL_DE_CONTROL.md     # 📖 Manual de uso completo
 ├── MONTAJE.md               # 🔧 Manual de construcción fase por fase
-├── COMPONENTES.md           # 🔩 Lista de materiales con precios (~1.280 USD)
+├── COMPONENTES.md           # 🔩 Lista de materiales con precios (~1.230 USD)
 ├── CARRITO_ALIEXPRESS.md    # 🛒 Carrito de compra con búsquedas y precios USD
 └── modelo3d/
     ├── modelo3d.scad        # Modelo paramétrico (OpenSCAD)
