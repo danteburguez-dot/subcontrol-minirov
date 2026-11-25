@@ -1,0 +1,13 @@
+# Empaquetado PyInstaller
+build/
+dist/
+*.spec
+__pycache__/
+*.pyc
+
+# Configuración local
+subcontrol_config.json
+
+# Entorno virtual
+venv/
+.venv/
