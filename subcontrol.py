@@ -1168,9 +1168,9 @@ class App(tk.Tk):
         self.log(f"Vigilancia automática: {'ON — la cámara PTZ gira sola' if self.ptz_auto else 'OFF'}")
 
     # ------------------------------------------- modelo 3D en vivo
-    PROPS = [((150, 56, -38), "x", 1), ((150, -56, -38), "x", -1),
-             ((-150, 56, -38), "x", -1), ((-150, -56, -38), "x", 1),
-             ((150, 0, 96), "z", 1), ((-150, 0, 96), "z", -1)]
+    PROPS = [((174, 56, -38), "x", 1), ((174, -56, -38), "x", -1),
+             ((-174, 56, -38), "x", -1), ((-174, -56, -38), "x", 1),
+             ((150, 0, 100), "z", 1), ((-150, 0, 100), "z", -1)]
 
     def _geo_rov(self):
         """Silueta de submarino real (loft de anillos) + todos los mecanismos."""
@@ -1208,10 +1208,15 @@ class App(tk.Tk):
         faces.append((anillos[0], [60, 68, 76]))    # cola
         faces.append((anillos[-1], [96, 104, 112]))  # punta del morro
 
-        # ---- mecanismos: 4 pods horizontales bajo la panza
+        # ---- mecanismos: 4 pods horizontales bajo la panza (soporte+pod+tobera)
         for xx, yy in ((150, 56), (150, -56), (-150, 56), (-150, -56)):
             sy = 1 if yy > 0 else -1
-            caja((xx - 22, sy * 28, -46), (xx + 22, yy, -30), GRIS_OSC)
+            caja((xx - 14, sy * 36, -44), (xx + 14, sy * 50, -34), GRIS)   # soporte
+            caja((xx - 22, sy * 28, -46), (xx + 22, yy, -30), GRIS_OSC)    # pod
+            if xx > 0:
+                caja((172, yy - 17, -17), (182, yy + 17, 17), GRIS)        # tobera
+            else:
+                caja((-182, yy - 17, -17), (-172, yy + 17, 17), GRIS)
         # ---- 2 verticales como torretas en cubierta
         for xx in (150, -150):
             caja((xx - 22, -16, 46), (xx + 22, 16, 96), GRIS_OSC)
@@ -1249,6 +1254,13 @@ class App(tk.Tk):
 
         # ---- hatch de baterías en cubierta (popa)
         caja((-190, -24, 44), (-120, 24, 54), GRIS_OSC)
+        caja((-160, -8, 54), (-148, 8, 58), AMARILLO)                    # asa
+
+        # ---- detalles: línea de flotación, quilla, muñequera, boca del cañón
+        caja((-150, -50, -2), (150, 50, 2), [126, 136, 146])             # línea de agua
+        caja((-150, -9, -52), (150, 9, -48), GRIS)                       # quilla
+        caja((84, -16, -78), (110, 16, -62), GRIS_OSC)                   # muñequera pinza
+        caja((516, -9, -65), (526, 9, -57), GRIS_OSC)                    # boca del cañón
         return faces
 
     def _proyectar(self, pts):
@@ -1453,24 +1465,40 @@ class App(tk.Tk):
                        cx + t2[0][0] * s, cz - t2[2][0] * s,
                        fill="#9fb3c8", width=2, dash=(7, 5))
 
-        # hélices girando — según el empuje aplicado (con la rampa suave)
+        # hélices detalladas: tobera + buje + 3 palas rellenas que giran
         c = (self.link.aplicado if self.link
              else {"x": 0.0, "y": 0.0, "z": 0.0, "r": 0.0})
         empuje = max(abs(c["x"]), abs(c["y"]), abs(c["z"]), abs(c["r"]))
         self._prop_ang += 0.25 + 0.9 * empuje
         for (hub, eje, signo) in self.PROPS:
-            hx, hy, hz = self._proyectar(np.array([np.array(hub, dtype=float)]))
+            h = np.array(hub, dtype=float)
+            hx, hy, hz = self._proyectar(np.array([h]))
             hpx, hpy = cx + hx[0] * s, cz - hz[0] * s
-            for k in range(3):
-                th = self._prop_ang * signo + k * math.pi / 3.0
-                if eje == "x":
-                    dirv = np.array([0.0, math.cos(th), math.sin(th)]) * 30.0
+
+            def pto(radio, ang, _h=h, _eje=eje):
+                if _eje == "x":
+                    p = _h + np.array([0.0, radio * math.cos(ang),
+                                       radio * math.sin(ang)])
                 else:
-                    dirv = np.array([math.cos(th), math.sin(th), 0.0]) * 30.0
-                base = np.array([np.array(hub, dtype=float) + dirv])
-                tx, _, tz = self._proyectar(base)
-                cv.create_line(hpx, hpy, cx + tx[0] * s, cz - tz[0] * s,
-                               fill="#f85149", width=2)
+                    p = _h + np.array([radio * math.cos(ang),
+                                       radio * math.sin(ang), 0.0])
+                qx, _, qz = self._proyectar(np.array([p]))
+                return (cx + qx[0] * s, cz - qz[0] * s)
+
+            anillo = []
+            for k in range(13):                       # tobera
+                anillo.extend(pto(17.0, 2 * math.pi * k / 12))
+            cv.create_line(anillo, fill="#7a848e", width=1)
+            for b in range(3):                        # 3 palas rellenas
+                a0 = self._prop_ang * signo + b * 2 * math.pi / 3.0
+                p1 = pto(4.0, a0 - 0.42)
+                p2 = pto(16.0, a0 - 0.10)
+                p3 = pto(16.0, a0 + 0.10)
+                p4 = pto(4.0, a0 + 0.42)
+                cv.create_polygon(p1, p2, p3, p4,
+                                  fill="#e05545", outline="#7a2a22", width=1)
+            cv.create_oval(hpx - 3, hpy - 3, hpx + 3, hpy + 3,
+                           fill="#c9d1d9", outline="#5a6069")  # buje
 
         # cámaras PTZ: flecha de vista que gira 360° en el modelo
         campos_ptz = {1: (132, 0, 66), 3: (0, 58, 18), 4: (0, -58, 18)}
