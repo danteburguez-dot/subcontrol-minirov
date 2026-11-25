@@ -1512,11 +1512,11 @@ class App(tk.Tk):
         empuje = max(abs(c["x"]), abs(c["y"]), abs(c["z"]), abs(c["r"]))
         self._prop_ang += 0.25 + 0.9 * empuje
         for (hub, eje, signo) in self.PROPS:
-            h = np.array(hub, dtype=float)
-            hx, hy, hz = self._proyectar(np.array([h]))
+            hub_p = np.array(hub, dtype=float)
+            hx, hy, hz = self._proyectar(np.array([hub_p]))
             hpx, hpy = cx + hx[0] * s, cz - hz[0] * s
 
-            def pto(radio, ang, _h=h, _eje=eje):
+            def pto(radio, ang, _h=hub_p, _eje=eje):
                 if _eje == "x":
                     p = _h + np.array([0.0, radio * math.cos(ang),
                                        radio * math.sin(ang)])
