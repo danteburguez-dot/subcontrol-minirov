@@ -343,6 +343,9 @@ class SubLink(threading.Thread):
         elif t == "VFR_HUD":
             if msg.heading:
                 self.estado["rumbo"] = float(msg.heading)
+        elif t == "ATTITUDE":
+            self.estado["roll"] = math.degrees(msg.roll)
+            self.estado["pitch"] = math.degrees(msg.pitch)
         elif t == "NAMED_VALUE_FLOAT":
             nm = msg.name if isinstance(msg.name, str) else msg.name.decode("utf-8", "ignore")
             if nm.strip() == "Dep":
@@ -634,7 +637,8 @@ class App(tk.Tk):
 
         self.cfg = cargar_config()
         self.estado = {"conectado": False, "modo": "—", "armado": False,
-                       "profundidad": 0.0, "rumbo": 0.0, "volt": 0.0, "batt": 0.0}
+                       "profundidad": 0.0, "rumbo": 0.0, "volt": 0.0, "batt": 0.0,
+                       "roll": 0.0, "pitch": 0.0}
         self.teclas = set()
         self.mando_ejes = {"x": 0.0, "y": 0.0, "z": 0.0, "r": 0.0}
         self.mando_btns = [False] * 16
@@ -674,6 +678,8 @@ class App(tk.Tk):
         self.demo_prof = 0.0
         self.demo_rumbo = 0.0
         self.demo_batt = 88.0
+        self.demo_roll = 0.0
+        self.demo_pitch = 0.0
         self._construir_ui()
 
         self.feeds = [CameraFeed(i, lambda i=i: self.cfg["camaras"][i]["url"],
@@ -763,10 +769,12 @@ class App(tk.Tk):
                                  text="CAM 1 · Frontal")
         self.cap_main.pack(fill="x")
 
-        # ---- Modelo 3D en vivo (hélices girando + avisos de golpe)
-        marco3d = tk.Frame(izq, bg=COL_BORDE, highlightbackground=COL_BORDE,
+        # ---- Fila inferior: modelo 3D + instrumentos de vuelo
+        fila31 = tk.Frame(izq, bg=COL_FONDO)
+        fila31.pack(fill="x", pady=(6, 0))
+        marco3d = tk.Frame(fila31, bg=COL_BORDE, highlightbackground=COL_BORDE,
                            highlightthickness=1)
-        marco3d.pack(fill="x", pady=(6, 0))
+        marco3d.pack(side="left", fill="both", expand=True)
         fila3d = tk.Frame(marco3d, bg=COL_PANEL)
         fila3d.pack(fill="x")
         tk.Label(fila3d, text="MODELO 3D EN VIVO — arrastra: girar · rueda: zoom · doble clic: reset",
@@ -775,7 +783,7 @@ class App(tk.Tk):
         tk.Button(fila3d, text="Simular golpe (demo)", bg=COL_PANEL, fg=COL_ROJO,
                   activebackground=COL_BORDE, relief="flat", font=("Segoe UI", 8),
                   command=self._simular_golpe).pack(side="right", padx=6, pady=2)
-        self.cv3d = tk.Canvas(marco3d, height=210, bg="#0b0f14", highlightthickness=0)
+        self.cv3d = tk.Canvas(marco3d, height=175, bg="#0b0f14", highlightthickness=0)
         self.cv3d.pack(fill="x")
         self.lbl_golpes = tk.Label(marco3d, bg=COL_PANEL, fg=COL_TEXTO, anchor="w",
                                    text="Golpes: 0 · sin impactos registrados",
@@ -790,6 +798,20 @@ class App(tk.Tk):
         self.cv3d.bind("<B1-Motion>", self._drag3d)
         self.cv3d.bind("<MouseWheel>", self._zoom3d)
         self.cv3d.bind("<Double-Button-1>", lambda e: self._reset3d())
+
+        # ---- Instrumentos de vuelo: horizonte artificial + brújula
+        marco_ins = tk.Frame(fila31, bg=COL_BORDE, highlightbackground=COL_BORDE,
+                             highlightthickness=1, width=380)
+        marco_ins.pack(side="right", fill="y")
+        marco_ins.pack_propagate(False)
+        tk.Label(marco_ins, text="INSTRUMENTOS DE VUELO", bg=COL_PANEL,
+                 fg=COL_ACENTO, font=("Segoe UI", 8, "bold")).pack(fill="x", pady=2)
+        self.cv_ins = tk.Canvas(marco_ins, width=360, height=175,
+                                bg="#0b0f14", highlightthickness=0)
+        self.cv_ins.pack(fill="both", expand=True)
+        self.lbl_ins = tk.Label(marco_ins, bg=COL_PANEL, fg=COL_TEXTO, anchor="w",
+                                text="EMP 0% · R +0° · P +0°", font=("Consolas", 8))
+        self.lbl_ins.pack(fill="x", padx=6, pady=(0, 3))
 
         self.minis = []
         for pos in range(5):
@@ -1177,7 +1199,110 @@ class App(tk.Tk):
 
     def _tick_3d(self):
         self._dibujar3d()
+        self._dibujar_instrumentos()
         self.after(120, self._tick_3d)
+
+    def _dibujar_instrumentos(self):
+        """Horizonte artificial (alabeo/cabeceo) + brújula de rumbo."""
+        cv = self.cv_ins
+        try:
+            w = max(80, cv.winfo_width())
+            h = max(60, cv.winfo_height())
+        except Exception:
+            return
+        cv.delete("all")
+        roll = self.estado.get("roll", 0.0)
+        pitch = self.estado.get("pitch", 0.0)
+        rumbo = self.estado["rumbo"]
+
+        # ===== horizonte artificial (izquierda) =====
+        ax, ay = int(w * 0.32), h // 2
+        R = min(int(h * 0.42), 74)
+        rr = math.radians(roll)
+        cr, sr = math.cos(rr), math.sin(rr)
+        K = 3.0
+
+        def rot(dx, dy):
+            return (ax + dx * cr - dy * sr, ay + dx * sr + dy * cr)
+
+        off = pitch * K
+        L = 1200
+        p1, p2 = rot(-L, off), rot(L, off)
+        cielo = (p1[0], p1[1], p2[0], p2[1],
+                 rot(L, off - L)[0], rot(L, off - L)[1],
+                 rot(-L, off - L)[0], rot(-L, off - L)[1])
+        tierra = (p1[0], p1[1], p2[0], p2[1],
+                  rot(L, off + L)[0], rot(L, off + L)[1],
+                  rot(-L, off + L)[0], rot(-L, off + L)[1])
+        cv.create_polygon(cielo, fill="#1e6fd9", outline="")
+        cv.create_polygon(tierra, fill="#8a5a2b", outline="")
+        cv.create_line(p1[0], p1[1], p2[0], p2[1], fill="white", width=2)
+        for d in (-20, -10, 10, 20):                     # escalera de cabeceo
+            o = (pitch - d) * K
+            q1, q2 = rot(-26, o), rot(26, o)
+            cv.create_line(q1[0], q1[1], q2[0], q2[1],
+                           fill="white", width=1, dash=(4, 3))
+            t = rot(34, o)
+            cv.create_text(t[0], t[1], text=str(abs(d)), fill="white",
+                           font=("Consolas", 7))
+        # máscara circular (tapar lo que sale del aro)
+        cv.create_rectangle(0, 0, w, ay - R, fill="#0b0f14", outline="")
+        cv.create_rectangle(0, ay + R, w, h, fill="#0b0f14", outline="")
+        cv.create_rectangle(0, ay - R, ax - R, ay + R, fill="#0b0f14", outline="")
+        cv.create_rectangle(ax + R, ay - R, w, ay + R, fill="#0b0f14", outline="")
+        cv.create_oval(ax - R, ay - R, ax + R, ay + R, outline="#58a6ff", width=2)
+        for a in (-60, -45, -30, -15, 0, 15, 30, 45, 60):  # escala de alabeo
+            aa = math.radians(a)
+            x1s = ax + (R + 2) * math.sin(aa)
+            y1s = ay - (R + 2) * math.cos(aa)
+            x2s = ax + (R + (14 if a % 30 == 0 else 7)) * math.sin(aa)
+            y2s = ay - (R + (14 if a % 30 == 0 else 7)) * math.cos(aa)
+            cv.create_line(x1s, y1s, x2s, y2s, fill="#c9d1d9", width=1)
+        pa = math.radians(roll)
+        cv.create_line(ax, ay, ax + (R - 6) * math.sin(pa),
+                       ay - (R - 6) * math.cos(pa), fill="yellow", width=2)
+        cv.create_line(ax - 26, ay, ax - 8, ay, fill="yellow", width=3)
+        cv.create_line(ax + 8, ay, ax + 26, ay, fill="yellow", width=3)
+        cv.create_oval(ax - 3, ay - 3, ax + 3, ay + 3, fill="yellow", outline="")
+
+        # ===== brújula (derecha) =====
+        cx2, cy2 = int(w * 0.74), h // 2
+        R2 = min(int(h * 0.40), 66)
+        cv.create_oval(cx2 - R2, cy2 - R2, cx2 + R2, cy2 + R2,
+                       outline="#30363d", width=2)
+        for a in range(0, 360, 15):
+            ang = math.radians(a - rumbo)
+            sa, ca = math.sin(ang), math.cos(ang)
+            mayor = (a % 45 == 0)
+            cv.create_line(cx2 + R2 * sa, cy2 - R2 * ca,
+                           cx2 + (R2 - (10 if mayor else 5)) * sa,
+                           cy2 - (R2 - (10 if mayor else 5)) * ca,
+                           fill="#c9d1d9", width=1)
+        letras = {0: "N", 45: "NE", 90: "E", 135: "SE", 180: "S",
+                  225: "SO", 270: "O", 315: "NO"}
+        for a, txt in letras.items():
+            ang = math.radians(a - rumbo)
+            cv.create_text(cx2 + (R2 - 20) * math.sin(ang),
+                           cy2 - (R2 - 20) * math.cos(ang),
+                           text=txt,
+                           fill="#58a6ff" if a in (0, 90, 180, 270) else "#8b949e",
+                           font=("Segoe UI", 8, "bold"))
+        cv.create_polygon(cx2 - 5, cy2 - R2 - 9, cx2 + 5, cy2 - R2 - 9,
+                          cx2, cy2 - R2 + 1, fill="yellow", outline="")
+        cv.create_text(cx2, cy2 + 1, text=f"{rumbo:.0f}°",
+                       fill="white", font=("Consolas", 12, "bold"))
+        cv.create_text(cx2, cy2 + 17, text="RUMBO", fill="#8b949e",
+                       font=("Segoe UI", 7))
+
+        c = (self.link.aplicado if self.link
+             else {"x": 0.0, "y": 0.0, "z": 0.0, "r": 0.0})
+        empuje = max(abs(c["x"]), abs(c["y"]), abs(c["z"]), abs(c["r"]))
+        try:
+            self.lbl_ins.configure(
+                text=(f"EMP {empuje * 100:.0f}% · R {roll:+.0f}° · "
+                      f"P {pitch:+.0f}° · {self.estado['modo']}"))
+        except Exception:
+            pass
 
     def _dibujar3d(self):
         cv = self.cv3d
@@ -1549,6 +1674,12 @@ class App(tk.Tk):
         self.estado["batt"] = self.demo_batt
         self.estado["volt"] = 16.8 * (0.75 + 0.25 * self.demo_batt / 100.0)
         self.estado["modo"] = "STABILIZE (demo)"
+        self.demo_roll += (limitar(-c["y"] * 0.9 - c["r"] * 0.2, 28.0)
+                           - self.demo_roll) * min(1.0, dt * 3.0)
+        self.demo_pitch += (limitar(c["x"] * 0.5, 18.0)
+                            - self.demo_pitch) * min(1.0, dt * 3.0)
+        self.estado["roll"] = self.demo_roll
+        self.estado["pitch"] = self.demo_pitch
 
     def _tick_control(self):
         # Mando: bordes de pulsación
