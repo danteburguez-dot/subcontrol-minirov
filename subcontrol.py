@@ -168,7 +168,7 @@ def limitar(v: float, lim: float = 1.0) -> float:
 # ----------------------------------------------------------------------------
 # Frame de video (hilo por cámara). Sin URL → genera señal DEMO.
 # ----------------------------------------------------------------------------
-def demo_frame(w: int, h: int, idx: int, t: float):
+def demo_frame(w: int, h: int, idx: int, t: float, aviso="SIN SENAL - MODO DEMO"):
     if not CV_OK:
         return None
     gx = np.linspace(0.0, 1.0, w, dtype=np.float32)
@@ -189,16 +189,17 @@ def demo_frame(w: int, h: int, idx: int, t: float):
     cv2.line(img, (0, ys), (w - 1, ys), (70, 150, 180), 1)
     cv2.putText(img, f"CAM {idx + 1}", (12, 32), cv2.FONT_HERSHEY_SIMPLEX,
                 0.85, (240, 240, 240), 2, cv2.LINE_AA)
-    cv2.putText(img, "SIN SENAL - MODO DEMO", (12, h - 14), cv2.FONT_HERSHEY_SIMPLEX,
+    cv2.putText(img, aviso, (12, h - 14), cv2.FONT_HERSHEY_SIMPLEX,
                 0.5, (150, 200, 255), 1, cv2.LINE_AA)
     return img
 
 
 class CameraFeed(threading.Thread):
-    def __init__(self, idx: int, get_url, size=(448, 252)):
+    def __init__(self, idx: int, get_url, get_demo=None, size=(448, 252)):
         super().__init__(daemon=True)
         self.idx = idx
         self.get_url = get_url
+        self.get_demo = get_demo or (lambda: True)
         self.size = size
         self.fps = 0.0
         self._frame = None
@@ -214,10 +215,13 @@ class CameraFeed(threading.Thread):
         t_cont = time.time()
         while self.alive.is_set():
             url = self.get_url() or ""
-            if not CV_OK or not url:
-                time.sleep(0.25)
+            demo = self.get_demo()
+            if not CV_OK or not url or demo:
+                # modo demo (o cámara sin configurar): señal simulada animada
+                time.sleep(0.12)
                 with self._lock:
-                    self._frame = demo_frame(*self.size, self.idx, time.time())
+                    self._frame = demo_frame(*self.size, self.idx, time.time(),
+                                             aviso="MODO DEMO" if demo else "SIN SEÑAL")
                 self.fps = 0.0
                 continue
             if url != url_prev:
@@ -623,6 +627,7 @@ PLATA = [160, 169, 178]
 ACERO = [125, 135, 150]
 NARANJA = [227, 179, 65]
 VERDE3D = [63, 185, 80]
+CRISTAL2 = [139, 200, 255]
 VERDE = COL_VERDE  # compatibilidad con secciones previas
 
 
@@ -659,10 +664,11 @@ class App(tk.Tk):
         self._gancho_cierre_hasta = 0.0
         self.golpes = []
         self.impacto = None         # {"lado":…, "g":…, "t":…}
-        self.vista3d = {"yaw": 35.0, "pitch": 18.0, "zoom": 0.34}
+        self.vista3d = {"yaw": 115.0, "pitch": 12.0, "zoom": 0.34}
         self._drag = None
         self._rumbo_prev = None   # para rotar el modelo 3D con el rumbo real
         self._prop_ang = 0.0
+        self.demo_flag = True        # True = cámaras muestran señal demo
         self.ptz = {}               # índice de cámara → ángulo 0-360°
         for i, c in enumerate(self.cfg["camaras"]):
             if c.get("ptz"):
@@ -683,6 +689,7 @@ class App(tk.Tk):
         self._construir_ui()
 
         self.feeds = [CameraFeed(i, lambda i=i: self.cfg["camaras"][i]["url"],
+                                 get_demo=lambda: self.demo_flag,
                                  size=(640, 360)) for i in range(5)]
         for f in self.feeds:
             f.start()
@@ -725,7 +732,7 @@ class App(tk.Tk):
         # ---- Cabecera
         head = tk.Frame(self, bg=COL_PANEL, highlightbackground=COL_BORDE, highlightthickness=1)
         head.pack(fill="x")
-        tk.Label(head, text=" submarine-dot-com  SUBCONTROL", bg=COL_PANEL, fg=COL_ACENTO,
+        tk.Label(head, text="SUBCONTROL", bg=COL_PANEL, fg=COL_ACENTO,
                  font=("Segoe UI", 16, "bold")).pack(side="left", padx=14, pady=8)
         tk.Label(head, text="Estación de superficie · mini-ROV 6 motores",
                  bg=COL_PANEL, fg=COL_TEXTO).pack(side="left", padx=4)
@@ -743,9 +750,24 @@ class App(tk.Tk):
         body.pack(fill="both", expand=True)
         video = tk.Frame(body, bg=COL_FONDO)
         video.pack(side="left", fill="both", expand=True, padx=(10, 6), pady=8)
-        sidebar = tk.Frame(body, bg=COL_FONDO, width=350)
-        sidebar.pack(side="right", fill="y", padx=(6, 10), pady=8)
-        sidebar.pack_propagate(False)
+        sb_frame = tk.Frame(body, bg=COL_FONDO, width=352)
+        sb_frame.pack(side="right", fill="y", padx=(6, 10), pady=8)
+        sb_frame.pack_propagate(False)
+        sb_scroll = ttk.Scrollbar(sb_frame, orient="vertical")
+        canvas_sb = tk.Canvas(sb_frame, bg=COL_FONDO, highlightthickness=0,
+                              yscrollcommand=sb_scroll.set)
+        sb_scroll.configure(command=canvas_sb.yview)
+        sb_scroll.pack(side="right", fill="y")
+        canvas_sb.pack(side="left", fill="both", expand=True)
+        sidebar = tk.Frame(canvas_sb, bg=COL_FONDO)
+        canvas_sb.create_window((0, 0), window=sidebar, anchor="nw", tags="inner")
+        canvas_sb.itemconfigure("inner", width=340)
+        sidebar.bind("<Configure>", lambda e: canvas_sb.configure(
+            scrollregion=canvas_sb.bbox("all")))
+        # rueda del mouse desplaza el panel SOLO con el cursor encima
+        canvas_sb.bind("<Enter>", lambda e: canvas_sb.bind_all(
+            "<MouseWheel>", lambda ev: canvas_sb.yview_scroll(-ev.delta // 120, "units")))
+        canvas_sb.bind("<Leave>", lambda e: canvas_sb.unbind_all("<MouseWheel>"))
 
         # ---- Cámaras estilo "videollamada": principal grande + 4 miniaturas
         self.orden = [0, 1, 2, 3, 4]   # orden[0] = cámara principal
@@ -762,11 +784,12 @@ class App(tk.Tk):
                               highlightthickness=1)
         marco_main.pack(fill="both", expand=True)
         self.lbl_main = tk.Label(marco_main, bg="#000", fg="#666",
-                                 text="CAM 1 — Frontal\n(clic en una miniatura para agrandar)",
+                                 text=(f"CAM 1 — {self.cfg['camaras'][0]['nombre']}\n"
+                                       "(clic en una miniatura para agrandar)"),
                                  font=("Segoe UI", 11))
         self.lbl_main.pack(fill="both", expand=True)
         self.cap_main = tk.Label(marco_main, bg=COL_PANEL, fg=COL_TEXTO, anchor="w",
-                                 text="CAM 1 · Frontal")
+                                 text=f"CAM 1 · {self.cfg['camaras'][0]['nombre']}")
         self.cap_main.pack(fill="x")
 
         # ---- Fila inferior: modelo 3D + instrumentos de vuelo
@@ -783,7 +806,7 @@ class App(tk.Tk):
         tk.Button(fila3d, text="Simular golpe (demo)", bg=COL_PANEL, fg=COL_ROJO,
                   activebackground=COL_BORDE, relief="flat", font=("Segoe UI", 8),
                   command=self._simular_golpe).pack(side="right", padx=6, pady=2)
-        self.cv3d = tk.Canvas(marco3d, height=175, bg="#0b0f14", highlightthickness=0)
+        self.cv3d = tk.Canvas(marco3d, height=188, bg="#0b0f14", highlightthickness=0)
         self.cv3d.pack(fill="x")
         self.lbl_golpes = tk.Label(marco3d, bg=COL_PANEL, fg=COL_TEXTO, anchor="w",
                                    text="Golpes: 0 · sin impactos registrados",
@@ -806,7 +829,7 @@ class App(tk.Tk):
         marco_ins.pack_propagate(False)
         tk.Label(marco_ins, text="INSTRUMENTOS DE VUELO", bg=COL_PANEL,
                  fg=COL_ACENTO, font=("Segoe UI", 8, "bold")).pack(fill="x", pady=2)
-        self.cv_ins = tk.Canvas(marco_ins, width=360, height=175,
+        self.cv_ins = tk.Canvas(marco_ins, width=360, height=188,
                                 bg="#0b0f14", highlightthickness=0)
         self.cv_ins.pack(fill="both", expand=True)
         self.lbl_ins = tk.Label(marco_ins, bg=COL_PANEL, fg=COL_TEXTO, anchor="w",
@@ -1134,7 +1157,7 @@ class App(tk.Tk):
              ((150, 75, 118), "z", 1), ((-150, -75, 118), "z", -1)]
 
     def _geo_rov(self):
-        """Geometría del ROV (mm, eje X adelante) como lista de caras."""
+        """Geometría exterior del ROV (mm, X adelante) — solo caras visibles."""
         faces = []
 
         def caja(p1, p2, color):
@@ -1147,41 +1170,66 @@ class App(tk.Tk):
                       (3, 2, 6, 7), (0, 3, 7, 4), (1, 5, 6, 2)):
                 faces.append((v[list(f)], color))
 
-        N, R = 12, 50
+        # ---- casco: tubo de 16 lados en dos tonos (superior más claro)
+        N, R = 16, 50
         angs = np.linspace(0, 2 * np.pi, N, endpoint=False)
-        ring_a = np.stack([np.full(N, -225.0), R * np.sin(angs), R * np.cos(angs)], axis=1)
-        ring_b = np.stack([np.full(N, 225.0), R * np.sin(angs), R * np.cos(angs)], axis=1)
+        ring_a = np.stack([np.full(N, -215.0), R * np.sin(angs), R * np.cos(angs)], axis=1)
+        ring_b = np.stack([np.full(N, 215.0), R * np.sin(angs), R * np.cos(angs)], axis=1)
         for i in range(N):
             j = (i + 1) % N
-            faces.append((np.array([ring_a[i], ring_a[j], ring_b[j], ring_b[i]]), AZUL))
-        faces.append((ring_b, [139, 200, 255]))    # frente (domo)
-        faces.append((ring_a, AZUL))               # popa
-        caja((-140, -45, 98), (140, 45, 138), AMARILLO)   # foam
-        caja((-180, -37, -84), (-10, 37, -32), NARANJA)   # batería intercambiable
-        caja((90, -12, -112), (600, 12, -88), PLATA)      # cañón del arpoón
-        caja((600, -8, -104), (640, 8, -96), ROJO)        # punta
-        caja((15, -30, -130), (105, 30, -70), GRIS_OSC)   # gimbal
-        caja((202, -40, -134), (248, 40, -102), ACERO)    # pinza
-        caja((248, -36, -122), (302, -24, -110), ACERO)   # dedo izq
-        caja((248, 24, -122), (302, 36, -110), ACERO)     # dedo der
-        for xx in (235, -235):                            # 4 motores horizontales
-            for yy in (105, -105):
-                caja((xx - 30, yy - 22, -22), (xx + 30, yy + 22, 22), GRIS_OSC)
-        for xx in (150, -150):                            # 2 motores verticales
-            for yy in (75, -75):
-                caja((xx - 22, yy - 22, 88), (xx + 22, yy + 22, 148), GRIS_OSC)
-        caja((-255, -4, 90), (-125, 4, 175), ROJO)        # aleta dorsal
-        caja((-265, 81, -40), (-165, 89, 40), ROJO)       # aleta popera der
-        caja((-265, -89, -40), (-165, -81, 40), ROJO)     # aleta popera izq
-        caja((-240, -4, -150), (-140, 4, -95), VERDE3D)   # quilla
-        caja((238, -20, 63), (252, 20, 93), BLANCO)       # 4 luces 10 W
-        caja((238, -20, -85), (252, 20, -55), BLANCO)
-        caja((238, 80, -20), (252, 120, 20), BLANCO)
-        caja((238, -120, -20), (252, -80, 20), BLANCO)
-        caja((40, -14, 50), (90, 14, 66), GRIS_OSC)       # CAM2 arriba (PTZ)
-        caja((40, -14, -66), (90, 14, -50), GRIS_OSC)     # CAM3 abajo
-        caja((60, 50, -16), (95, 72, 16), GRIS_OSC)       # CAM4 izquierda (PTZ)
-        caja((60, -72, -16), (95, -50, 16), GRIS_OSC)     # CAM5 derecha (PTZ)
+            zmed = float((R * math.cos(angs[i]) + R * math.cos(angs[j])) / 2.0)
+            col = [96, 196, 208] if zmed >= 0 else [58, 132, 148]
+            faces.append((np.array([ring_a[i], ring_a[j], ring_b[j], ring_b[i]]), col))
+        faces.append((ring_b, [150, 214, 252]))    # frente — domo
+        faces.append((ring_a, [70, 148, 162]))     # popa — tapa
+
+        # ---- foam superior (flotabilidad)
+        caja((-125, -40, 96), (125, 40, 126), AMARILLO)
+        # ---- bahía de baterías DeWalt (popa, abajo) + hatch
+        caja((-180, -34, -80), (-15, 34, -34), NARANJA)
+        caja((-190, -40, -30), (-10, 40, -22), GRIS_OSC)
+        # ---- gimbal del arpoón
+        caja((10, -24, -122), (92, 24, -74), GRIS_OSC)
+        # ---- arpoón: cañón delgado + punta
+        caja((92, -7, -104), (555, 7, -94), PLATA)
+        caja((555, -5, -101), (620, 5, -97), ROJO)
+        # ---- 6 motores como pods
+        for xx, yy in ((235, 105), (235, -105), (-235, 105), (-235, -105)):
+            caja((xx - 26, yy - 20, -20), (xx + 26, yy + 20, 20), GRIS_OSC)
+        for xx, yy in ((150, 75), (-150, -75)):
+            caja((xx - 18, yy - 18, 92), (xx + 18, yy + 18, 144), GRIS_OSC)
+        # ---- aletas (delgadas tipo cuchilla)
+        caja((-252, -4, 90), (-132, 4, 168), ROJO)                 # dorsal
+        caja((-258, 80, -38), (-172, 86, 38), ROJO)                # popera der
+        caja((-258, -86, -38), (-172, -80, 38), ROJO)              # popera izq
+        caja((-232, -3, -146), (-142, 3, -102), VERDE3D)           # quilla
+        # ---- 4 luces 10 W (frente, cruz de 90°)
+        for p1, p2 in (((238, -18, 60), (254, 18, 92)),
+                       ((238, -18, -88), (254, 18, -56)),
+                       ((238, 78, -18), (254, 116, 18)),
+                       ((238, -116, -18), (254, -78, 18))):
+            caja(p1, p2, BLANCO)
+        # ---- cámaras: punta (en domo), abajo y 3 domos PTZ con LED
+        caja((38, -12, 52), (86, 12, 64), GRIS_OSC)                # CAM2 base
+        caja((86, -12, 46), (100, 12, 70), CRISTAL2)               # cúpula CAM2
+        for a in range(0, 360, 60):                                # anillo LED CAM2
+            aa = math.radians(a)
+            caja((58 + 15 * math.cos(aa) - 3, -4, 58 + 15 * math.sin(aa) - 3),
+                 (58 + 15 * math.cos(aa) + 3, 4, 58 + 15 * math.sin(aa) + 3), BLANCO)
+        caja((38, -12, -64), (86, 12, -52), GRIS_OSC)              # CAM3 abajo
+        for s in (1, -1):                                          # CAM4/CAM5
+            caja((70, s * 54 - 12, -12), (92, s * 54 + 12, 12), GRIS_OSC)
+            caja((92, s * 54 - 12, -13), (104, s * 54 + 12, 13), CRISTAL2)
+            for a in (0, 120, 240):
+                aa = math.radians(a)
+                caja((88 + 8 * math.cos(aa) - 2, s * 54 + s * 14 - 2,
+                      8 * math.sin(aa) - 2),
+                     (88 + 8 * math.cos(aa) + 2, s * 54 + s * 14 + 2,
+                      8 * math.sin(aa) + 2), BLANCO)
+        # ---- pinza reforzada (frente-abajo)
+        caja((200, -38, -132), (246, 38, -102), ACERO)
+        caja((246, -34, -120), (298, -22, -110), ACERO)
+        caja((246, 22, -120), (298, 34, -110), ACERO)
         return faces
 
     def _proyectar(self, pts):
@@ -1312,6 +1360,9 @@ class App(tk.Tk):
         except Exception:
             return
         cv.delete("all")
+        for k, ccol in enumerate(("#0a0e14", "#0b1017", "#0c121a", "#0d141c")):
+            cv.create_rectangle(0, k * h // 4, w, (k + 1) * h // 4,
+                                fill=ccol, outline="")
         s = self.vista3d["zoom"]
         cx, cz = w / 2.0, h / 2.0 + 8
         # auto-encuadre la primera vez y tras "reset" (doble clic)
@@ -1374,6 +1425,15 @@ class App(tk.Tk):
             cv.create_polygon(coords, fill="#%02x%02x%02x" % col,
                               outline="#0b0f14", width=1)
 
+        # cable (tether) saliendo por popa
+        t0 = self._proyectar(np.array([[-215.0, 0.0, -45.0]]))
+        t1 = self._proyectar(np.array([[-315.0, -16.0, -8.0]]))
+        t2 = self._proyectar(np.array([[-420.0, -24.0, 14.0]]))
+        cv.create_line(cx + t0[0][0] * s, cz - t0[2][0] * s,
+                       cx + t1[0][0] * s, cz - t1[2][0] * s,
+                       cx + t2[0][0] * s, cz - t2[2][0] * s,
+                       fill="#9fb3c8", width=2, dash=(7, 5))
+
         # hélices girando — según el empuje aplicado (con la rampa suave)
         c = (self.link.aplicado if self.link
              else {"x": 0.0, "y": 0.0, "z": 0.0, "r": 0.0})
@@ -1433,7 +1493,7 @@ class App(tk.Tk):
         self.vista3d["zoom"] = max(0.12, min(1.2, self.vista3d["zoom"] * f))
 
     def _reset3d(self):
-        self.vista3d = {"yaw": 35.0, "pitch": 18.0, "zoom": 0.34}
+        self.vista3d = {"yaw": 115.0, "pitch": 12.0, "zoom": 0.34}
         self._fit3d = False
 
     def _registrar_golpe(self, dato):
@@ -1588,6 +1648,7 @@ class App(tk.Tk):
             pass
 
         con = self.estado["conectado"]
+        self.demo_flag = not con
         if not con:
             self._simular_demo(0.1)
 
@@ -1854,6 +1915,10 @@ class App(tk.Tk):
             fr2 = self.feeds[i].obtener()
             if fr2 is not None:
                 chico = cv2.resize(fr2, (160, 90))
+                cv2.rectangle(chico, (0, 0), (160, 15), (25, 25, 25), -1)
+                cv2.putText(chico, f"CAM {i+1} · {self.cfg['camaras'][i]['nombre']}",
+                            (3, 11), cv2.FONT_HERSHEY_SIMPLEX, 0.32,
+                            (240, 240, 240), 1, cv2.LINE_AA)
                 img = Image.fromarray(cv2.cvtColor(chico, cv2.COLOR_BGR2RGB))
                 ph = ImageTk.PhotoImage(img, master=self)
                 lbl.configure(image=ph, text="", bg="#000")

@@ -128,3 +128,26 @@ más barata con buen vendedor (>95% valoración) y añade al carrito. Al final, 
 - El pack de 4× Readytosky da margen: 6 motores + 2 de repuesto.
 - Envío estimado: 2–4 semanas; pide TODO en un solo pedido si el vendedor lo
   permite (o 2–3 pedidos de vendedores fiables).
+
+---
+
+## 💰 TOTAL GENERAL — Dólares y Guaraníes
+
+Tipo de cambio usado: **1 USD ≈ ₲ 6.420** (25/11/2026, Paraguay).
+
+| Concepto | USD | Guaraníes (≈) |
+|---|---|---|
+| Carrito AliExpress (todo el hardware) | $738 | ₲ 4.740.000 |
+| Envío combinado AliExpress | $20 | ₲ 130.000 |
+| Kit DEWALT DCB205-2C (2 baterías 20V + cargador) | $149 | ₲ 957.000 |
+| Ferretería local (PVC, herrajes, epoxi, foam) | $50 | ₲ 320.000 |
+| Impresión 3D de las piezas (soportes PTZ, pinza, anclas) | $30 | ₲ 193.000 |
+| **TOTAL DEL PROYECTO COMPLETO** | **≈ $987** | **≈ ₲ 6.330.000** |
+
+### Referencias rápidas
+
+- Con tiendas generales (Amazon/local, sin usar AliExpress): ≈ **$1.230 ≈ ₲ 7.900.000**
+- **Si ya tienes las baterías DeWalt**: resta $149 (₲ 957.000) → ≈ **$838 ≈ ₲ 5.380.000**
+- Solo el carrito de AliExpress con envío: ≈ **$758 ≈ ₲ 4.870.000**
+- Nota: los impuestos de aduana de Paraguay sobre paquetes internacionales pueden
+  agregar costos extra según el courier y el valor declarado de cada caja.
