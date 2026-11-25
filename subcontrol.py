@@ -124,6 +124,7 @@ DEFAULT_CONFIG = {
     "potencia_media_w": 120,
     "invertir_eje_z": False,
     "escala_movimiento": 800,
+    "rampa_empuje": 1.2,       # sube/baja el empuje de a poco (0→1 en ~1 s)
     "tiempo_subida_emergencia_s": 90,
     "umbral_golpe_g": 3.0,     # aceleración (g) que cuenta como golpe
 }
@@ -263,6 +264,8 @@ class SubLink(threading.Thread):
         self.alive = threading.Event()
         self.alive.set()
         self.cmd = {"x": 0.0, "y": 0.0, "z": 0.0, "r": 0.0}
+        self.aplicado = {"x": 0.0, "y": 0.0, "z": 0.0, "r": 0.0}  # empuje real (rampa)
+        self._t_rampa = 0.0
         self.aux = {"luces1": False, "luces2": False, "luces_ptz": False, "pinza": 0,
                     "gimbal_yaw": 1500.0, "gimbal_pitch": 1500.0,
                     "arpon": 1000, "carrete": 1500}  # pinza: 1 abrir, -1 cerrar, 0 centro
@@ -424,9 +427,26 @@ class SubLink(threading.Thread):
                 self.log("Emergencia finalizada: superficie alcanzada (o límite de tiempo).")
             return
 
+        # rampa de empuje: los motores aceleran y frenan de a poco (sin picos)
+        # (en emergencias se salta la rampa: potencia inmediata)
         c = self.cmd
+        a = self.aplicado
+        ahora_r = time.time()
+        dt = min(0.25, max(0.005, ahora_r - self._t_rampa)) if self._t_rampa else 0.05
+        self._t_rampa = ahora_r
+        tasa = self.cfg.get("rampa_empuje", 1.2) * dt
+        for k in ("x", "y", "z", "r"):
+            dif = c[k] - a[k]
+            if dif == 0.0:
+                continue
+            paso = max(-tasa, min(tasa, dif))
+            if abs(c[k]) < abs(a[k]):          # frenar es más rápido (×2)
+                paso *= 2.0
+                if abs(paso) > abs(dif):
+                    paso = dif
+            a[k] += paso
         esc = self.cfg.get("escala_movimiento", 800)
-        self._enviar_manual(c["x"] * esc, c["y"] * esc, c["z"] * esc, c["r"] * esc)
+        self._enviar_manual(a["x"] * esc, a["y"] * esc, a["z"] * esc, a["r"] * esc)
         self._enviar_aux(ahora)
 
     def _enviar_manual(self, x, y, z, r):
@@ -749,6 +769,10 @@ class App(tk.Tk):
                                    font=("Consolas", 9))
         self.lbl_golpes.pack(fill="x", padx=8, pady=(0, 4))
         self._geo = self._geo_rov()
+        _todos = np.vstack([c[0] for c in self._geo])
+        self._centro3d = (_todos.min(axis=0) + _todos.max(axis=0)) / 2.0
+        self._ext3d = _todos.max(axis=0) - _todos.min(axis=0)
+        self._fit3d = False
         self.cv3d.bind("<ButtonPress-1>", self._drag3d_ini)
         self.cv3d.bind("<B1-Motion>", self._drag3d)
         self.cv3d.bind("<MouseWheel>", self._zoom3d)
@@ -1126,7 +1150,8 @@ class App(tk.Tk):
         vp = math.radians(self.vista3d["pitch"])
         cy, sy = math.cos(vy), math.sin(vy)
         cp, sp = math.cos(vp), math.sin(vp)
-        x, y, z = pts[:, 0], pts[:, 1], pts[:, 2]
+        p = pts - self._centro3d          # centrar el modelo (el arpoón desplaza el bbox)
+        x, y, z = p[:, 0], p[:, 1], p[:, 2]
         x1 = x * cy - y * sy
         y1 = x * sy + y * cy
         y2 = y1 * cp - z * sp
@@ -1147,6 +1172,13 @@ class App(tk.Tk):
         cv.delete("all")
         s = self.vista3d["zoom"]
         cx, cz = w / 2.0, h / 2.0 + 8
+        # auto-encuadre la primera vez y tras "reset" (doble clic)
+        if not self._fit3d and w > 120 and h > 60:
+            self.vista3d["zoom"] = max(
+                0.12, min(1.2, min(w / max(1.0, self._ext3d[0]),
+                                   h / max(1.0, self._ext3d[2])) * 0.78))
+            s = self.vista3d["zoom"]
+            self._fit3d = True
         ahora = time.time()
         golpe_act = self.impacto is not None and ahora - self.impacto["t"] < 3.0
         flash = int(ahora * 6) % 2 == 0
@@ -1154,17 +1186,27 @@ class App(tk.Tk):
         normales_lado = {"frontal": (1, 0, 0), "popa": (-1, 0, 0),
                          "lateral derecho": (0, 1, 0), "lateral izquierdo": (0, -1, 0),
                          "superior": (0, 0, 1), "inferior": (0, 0, -1)}
+        vy = math.radians(self.vista3d["yaw"])
+        vp = math.radians(self.vista3d["pitch"])
+        cyv, syv = math.cos(vy), math.sin(vy)
+        cpv, spv = math.cos(vp), math.sin(vp)
         dibujos = []
         for pts, color in self._geo:
+            n = np.cross(pts[1] - pts[0], pts[2] - pts[0])
+            nn = np.linalg.norm(n)
+            if nn <= 1e-6:
+                continue
+            n = n / nn
+            rc = pts.mean(axis=0) - self._centro3d
+            if float(np.dot(n, rc)) < 0:
+                n = -n
+            # ocultar caras traseras: SOLO se ve el exterior del submarino
+            a, b, c = n
+            if (a * syv + b * cyv) * cpv - c * spv > 0:
+                continue
             x1, y2, z2 = self._proyectar(pts)
             px = cx + x1 * s
             py = cz - z2 * s
-            n = np.cross(pts[1] - pts[0], pts[2] - pts[0])
-            nn = np.linalg.norm(n)
-            if nn > 1e-6:
-                n = n / nn
-                if float(np.dot(n, pts.mean(axis=0))) < 0:
-                    n = -n
             col = np.array(color[:3], dtype=float)
             if golpe_act and flash:
                 nl = np.array(normales_lado[self.impacto["lado"]], dtype=float)
@@ -1175,11 +1217,16 @@ class App(tk.Tk):
             dibujos.append((float(y2.mean()), px, py, col))
         dibujos.sort(key=lambda d: -d[0])
         for _, px, py, col in dibujos:
-            cv.create_polygon(px.tolist(), py.tolist(), fill="#%02x%02x%02x" % col,
+            coords = []
+            for ax, ay in zip(px.tolist(), py.tolist()):
+                coords.append(ax)
+                coords.append(ay)
+            cv.create_polygon(coords, fill="#%02x%02x%02x" % col,
                               outline="#0b0f14", width=1)
 
-        # hélices girando — velocidad según el empuje real de los motores
-        c = self.link.cmd if self.link else {"x": 0.0, "y": 0.0, "z": 0.0, "r": 0.0}
+        # hélices girando — según el empuje aplicado (con la rampa suave)
+        c = (self.link.aplicado if self.link
+             else {"x": 0.0, "y": 0.0, "z": 0.0, "r": 0.0})
         empuje = max(abs(c["x"]), abs(c["y"]), abs(c["z"]), abs(c["r"]))
         self._prop_ang += 0.25 + 0.9 * empuje
         for (hub, eje, signo) in self.PROPS:
@@ -1237,6 +1284,7 @@ class App(tk.Tk):
 
     def _reset3d(self):
         self.vista3d = {"yaw": 35.0, "pitch": 18.0, "zoom": 0.34}
+        self._fit3d = False
 
     def _registrar_golpe(self, dato):
         lado, g, t = dato
@@ -1450,7 +1498,8 @@ class App(tk.Tk):
         self.after(100, self._tick_telem)
 
     def _simular_demo(self, dt):
-        c = self.link.cmd if self.link else {"x": 0, "y": 0, "z": 0, "r": 0}
+        c = (self.link.aplicado if self.link
+             else {"x": 0, "y": 0, "z": 0, "r": 0})
         if self.emergencia == "subida":
             self.demo_prof = max(0.0, self.demo_prof - 1.5 * dt)
             if self.demo_prof <= 0.01:
