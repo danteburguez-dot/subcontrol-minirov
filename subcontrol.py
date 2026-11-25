@@ -756,7 +756,7 @@ class App(tk.Tk):
         body.pack(fill="both", expand=True)
         video = tk.Frame(body, bg=COL_FONDO)
         video.pack(side="left", fill="both", expand=True, padx=(10, 6), pady=8)
-        sb_frame = tk.Frame(body, bg=COL_FONDO, width=352)
+        sb_frame = tk.Frame(body, bg=COL_FONDO, width=362)
         sb_frame.pack(side="right", fill="y", padx=(6, 10), pady=8)
         sb_frame.pack_propagate(False)
         sb_scroll = ttk.Scrollbar(sb_frame, orient="vertical")
@@ -767,7 +767,9 @@ class App(tk.Tk):
         canvas_sb.pack(side="left", fill="both", expand=True)
         sidebar = tk.Frame(canvas_sb, bg=COL_FONDO)
         canvas_sb.create_window((0, 0), window=sidebar, anchor="nw", tags="inner")
-        canvas_sb.itemconfigure("inner", width=340)
+        # el contenido se adapta al ancho visible (nada cortado a la derecha)
+        canvas_sb.bind("<Configure>", lambda e: canvas_sb.itemconfigure(
+            "inner", width=max(220, e.width - 4)))
         sidebar.bind("<Configure>", lambda e: canvas_sb.configure(
             scrollregion=canvas_sb.bbox("all")))
         # rueda del mouse desplaza el panel SOLO con el cursor encima
@@ -860,17 +862,17 @@ class App(tk.Tk):
         # ---- Panel EMERGENCIA (primero, bien visible)
         s = self._seccion(sidebar, "EMERGENCIA")
         s.pack(fill="x", pady=(0, 6))
-        self.btn_emerg = tk.Button(s, text="⛔  PARADA DE EMERGENCIA   [F1]",
+        self.btn_emerg = tk.Button(s, text="⛔ PARADA EMERGENCIA [F1]",
                                    bg=COL_ROJO, fg="white", activebackground="#c0392b",
-                                   font=("Segoe UI", 11, "bold"), relief="flat",
+                                   font=("Segoe UI", 10, "bold"), relief="flat",
                                    command=self._emerg_parada)
-        self.btn_emerg.pack(fill="x", padx=10, pady=(4, 3), ipady=7)
-        self.btn_subida = tk.Button(s, text="⬆  SUBIDA DE EMERGENCIA   [F2]",
+        self.btn_emerg.pack(fill="x", padx=10, pady=(4, 3), ipady=5)
+        self.btn_subida = tk.Button(s, text="⬆ SUBIDA EMERGENCIA [F2]",
                                     bg=COL_NARANJA, fg="#111", activebackground="#c9a227",
-                                    font=("Segoe UI", 11, "bold"), relief="flat",
+                                    font=("Segoe UI", 10, "bold"), relief="flat",
                                     command=self._emerg_subida)
-        self.btn_subida.pack(fill="x", padx=10, pady=3, ipady=7)
-        self.btn_norm = tk.Button(s, text="Normalizar (cancelar emergencia)   [F3]",
+        self.btn_subida.pack(fill="x", padx=10, pady=3, ipady=5)
+        self.btn_norm = tk.Button(s, text="Normalizar [F3]",
                                   bg=COL_PANEL, fg=COL_TEXTO, activebackground=COL_BORDE,
                                   font=("Segoe UI", 9), relief="flat",
                                   command=self._emerg_normalizar)
@@ -1171,7 +1173,7 @@ class App(tk.Tk):
              ((150, 75, 118), "z", 1), ((-150, -75, 118), "z", -1)]
 
     def _geo_rov(self):
-        """Geometría exterior del ROV (mm, X adelante) — solo caras visibles."""
+        """Geometría exterior del ROV (mm, X adelante) — silueta limpia."""
         faces = []
 
         def caja(p1, p2, color):
@@ -1184,62 +1186,68 @@ class App(tk.Tk):
                       (3, 2, 6, 7), (0, 3, 7, 4), (1, 5, 6, 2)):
                 faces.append((v[list(f)], color))
 
-        # ---- casco: tubo de 16 lados en dos tonos (superior más claro)
-        N, R = 16, 50
+        def placa(pts, color):
+            q = np.array(pts, dtype=float)
+            faces.append((q, color))
+            faces.append((q[::-1].copy(), color))
+
+        # ---- casco: cilindro de 24 lados + morro y cola cónicos
+        N, R = 24, 50
         angs = np.linspace(0, 2 * np.pi, N, endpoint=False)
-        ring_a = np.stack([np.full(N, -215.0), R * np.sin(angs), R * np.cos(angs)], axis=1)
-        ring_b = np.stack([np.full(N, 215.0), R * np.sin(angs), R * np.cos(angs)], axis=1)
+        r_a = np.stack([np.full(N, -215.0), R * np.sin(angs), R * np.cos(angs)], axis=1)
+        r_b = np.stack([np.full(N, 215.0), R * np.sin(angs), R * np.cos(angs)], axis=1)
+        r_n = np.stack([np.full(N, 250.0), 28 * np.sin(angs), 28 * np.cos(angs)], axis=1)
+        r_s = np.stack([np.full(N, -248.0), 30 * np.sin(angs), 30 * np.cos(angs)], axis=1)
         for i in range(N):
             j = (i + 1) % N
             zmed = float((R * math.cos(angs[i]) + R * math.cos(angs[j])) / 2.0)
             col = [96, 196, 208] if zmed >= 0 else [58, 132, 148]
-            faces.append((np.array([ring_a[i], ring_a[j], ring_b[j], ring_b[i]]), col))
-        faces.append((ring_b, [150, 214, 252]))    # frente — domo
-        faces.append((ring_a, [70, 148, 162]))     # popa — tapa
+            faces.append((np.array([r_a[i], r_a[j], r_b[j], r_b[i]]), col))
+            faces.append((np.array([r_s[i], r_s[j], r_a[j], r_a[i]]), [70, 150, 164]))
+            faces.append((np.array([r_b[i], r_b[j], r_n[j], r_n[i]]), [120, 205, 225]))
+        faces.append((r_n, [170, 220, 250]))    # punta del morro (domo)
+        faces.append((r_s, [62, 132, 146]))     # tapa de cola
 
         # ---- foam superior (flotabilidad)
-        caja((-125, -40, 96), (125, 40, 126), AMARILLO)
+        caja((-115, -36, 96), (115, 36, 124), AMARILLO)
         # ---- bahía de baterías DeWalt (popa, abajo) + hatch
-        caja((-180, -34, -80), (-15, 34, -34), NARANJA)
-        caja((-190, -40, -30), (-10, 40, -22), GRIS_OSC)
-        # ---- gimbal del arpoón
+        caja((-175, -32, -90), (-20, 32, -40), NARANJA)
+        caja((-185, -38, -40), (-10, 38, -32), GRIS_OSC)
+        # ---- gimbal del arpoón (bajo el morro)
         caja((10, -24, -122), (92, 24, -74), GRIS_OSC)
         # ---- arpoón: cañón delgado + punta
         caja((92, -7, -104), (555, 7, -94), PLATA)
         caja((555, -5, -101), (620, 5, -97), ROJO)
-        # ---- 6 motores como pods
+        # ---- 6 motores: pods con soporte hacia el casco
         for xx, yy in ((235, 105), (235, -105), (-235, 105), (-235, -105)):
+            sy = 1 if yy > 0 else -1
+            caja((xx - 12, sy * 48, -12), (xx + 12, yy, 12), GRIS)      # soporte
             caja((xx - 26, yy - 20, -20), (xx + 26, yy + 20, 20), GRIS_OSC)
         for xx, yy in ((150, 75), (-150, -75)):
-            caja((xx - 18, yy - 18, 92), (xx + 18, yy + 18, 144), GRIS_OSC)
-        # ---- aletas (delgadas tipo cuchilla)
-        caja((-252, -4, 90), (-132, 4, 168), ROJO)                 # dorsal
-        caja((-258, 80, -38), (-172, 86, 38), ROJO)                # popera der
-        caja((-258, -86, -38), (-172, -80, 38), ROJO)              # popera izq
-        caja((-232, -3, -146), (-142, 3, -102), VERDE3D)           # quilla
+            caja((xx - 12, yy - 12, 50), (xx + 12, yy + 12, 94), GRIS)  # mástil
+            caja((xx - 18, yy - 18, 94), (xx + 18, yy + 18, 146), GRIS_OSC)
+        # ---- aletas: cuchillas con silueta real
+        placa([(-250, 0, 90), (-132, 0, 90), (-146, 0, 166), (-236, 0, 166)], ROJO)
+        placa([(-258, 82, -36), (-172, 82, -36), (-168, 82, 38), (-254, 82, 38)], ROJO)
+        placa([(-258, -82, -36), (-172, -82, -36), (-168, -82, 38), (-254, -82, 38)], ROJO)
+        placa([(-230, 0, -100), (-142, 0, -100), (-152, 0, -142), (-224, 0, -142)], VERDE3D)
         # ---- 4 luces 10 W (frente, cruz de 90°)
-        for p1, p2 in (((238, -18, 60), (254, 18, 92)),
-                       ((238, -18, -88), (254, 18, -56)),
-                       ((238, 78, -18), (254, 116, 18)),
-                       ((238, -116, -18), (254, -78, 18))):
+        for p1, p2 in (((236, -18, 58), (252, 18, 90)),
+                       ((236, -18, -90), (252, 18, -58)),
+                       ((236, 76, -18), (252, 114, 18)),
+                       ((236, -114, -18), (252, -76, 18))):
             caja(p1, p2, BLANCO)
-        # ---- cámaras: punta (en domo), abajo y 3 domos PTZ con LED
-        caja((38, -12, 52), (86, 12, 64), GRIS_OSC)                # CAM2 base
-        caja((86, -12, 46), (100, 12, 70), CRISTAL2)               # cúpula CAM2
-        for a in range(0, 360, 60):                                # anillo LED CAM2
-            aa = math.radians(a)
-            caja((58 + 15 * math.cos(aa) - 3, -4, 58 + 15 * math.sin(aa) - 3),
-                 (58 + 15 * math.cos(aa) + 3, 4, 58 + 15 * math.sin(aa) + 3), BLANCO)
+        # ---- cámaras: punta (en el morro), abajo y 3 domos PTZ con LED
+        caja((55, -12, 50), (95, 12, 62), GRIS_OSC)                # CAM2 base
+        caja((95, -12, 44), (107, 12, 68), CRISTAL2)               # cúpula CAM2
+        for dx, dz in ((-14, 12), (14, 12), (-14, -12), (14, -12)):  # LEDs CAM2
+            caja((75 + dx - 3, -4, 58 + dz - 3), (75 + dx + 3, 4, 58 + dz + 3), BLANCO)
         caja((38, -12, -64), (86, 12, -52), GRIS_OSC)              # CAM3 abajo
         for s in (1, -1):                                          # CAM4/CAM5
-            caja((70, s * 54 - 12, -12), (92, s * 54 + 12, 12), GRIS_OSC)
-            caja((92, s * 54 - 12, -13), (104, s * 54 + 12, 13), CRISTAL2)
-            for a in (0, 120, 240):
-                aa = math.radians(a)
-                caja((88 + 8 * math.cos(aa) - 2, s * 54 + s * 14 - 2,
-                      8 * math.sin(aa) - 2),
-                     (88 + 8 * math.cos(aa) + 2, s * 54 + s * 14 + 2,
-                      8 * math.sin(aa) + 2), BLANCO)
+            caja((70, s * 50, -12), (92, s * 62, 12), GRIS_OSC)
+            caja((92, s * 50, -13), (104, s * 62, 13), CRISTAL2)
+            for dz in (-8, 0, 8):                                  # 3 LEDs c/u
+                caja((100, s * 50, dz - 3), (106, s * 62, dz + 3), BLANCO)
         # ---- pinza reforzada (frente-abajo)
         caja((200, -38, -132), (246, 38, -102), ACERO)
         caja((246, -34, -120), (298, -22, -110), ACERO)
