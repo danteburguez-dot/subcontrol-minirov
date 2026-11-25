@@ -1256,10 +1256,9 @@ class App(tk.Tk):
             caja((8, s * 50, -14), (36, s * 62, 14), GRIS_OSC)         # pod
             caja((30, s * 52, -12), (38, s * 60, 12), GRIS)            # tobera atrás
 
-        # ---- arpoón bajo el morro: gimbal + cañón + punta
+        # ---- arpoón: gimbal fijo — el cañón se dibuja DINÁMICO en _dibujar3d
+        #      (gira de verdad con los ángulos U/I/O/K y el autoapuntado)
         caja((0, -20, -74), (70, 20, -48), GRIS_OSC)
-        caja((70, -6, -66), (520, 6, -56), PLATA)
-        caja((520, -4, -62), (580, 4, -60), ROJO)
 
         # ---- pinza reforzada (bajo el morro, al lado del arpoón)
         caja((110, -34, -86), (150, 34, -58), ACERO)
@@ -1304,7 +1303,6 @@ class App(tk.Tk):
         caja((-150, -50, -2), (150, 50, 2), [126, 136, 146])             # línea de agua
         caja((-150, -9, -52), (150, 9, -48), GRIS)                       # quilla
         caja((84, -16, -78), (110, 16, -62), GRIS_OSC)                   # muñequera pinza
-        caja((516, -9, -65), (526, 9, -57), GRIS_OSC)                    # boca del cañón
         return faces
 
     def _proyectar(self, pts):
@@ -1508,6 +1506,26 @@ class App(tk.Tk):
                        cx + t1[0][0] * s, cz - t1[2][0] * s,
                        cx + t2[0][0] * s, cz - t2[2][0] * s,
                        fill="#9fb3c8", width=2, dash=(7, 5))
+
+        # arpón ARTICULADO: el cañón gira en vivo con el gimbal (yaw/pitch)
+        piv = np.array([35.0, 0.0, -61.0])
+        gp = math.radians(self.gimbal["pitch"])
+        gy = math.radians(self.gimbal["yaw"])
+        d = np.array([math.cos(gp) * math.cos(gy),
+                      -math.cos(gp) * math.sin(gy),
+                      math.sin(gp)])
+        a0, _, c0 = self._proyectar(np.array([piv]))
+        a1, _, c1 = self._proyectar(np.array([piv + d * 470.0]))
+        cv.create_line(cx + a0[0] * s, cz - c0[0] * s,
+                       cx + a1[0] * s, cz - c1[0] * s,
+                       fill="#a0a9b2", width=5)
+        a2, _, c2 = self._proyectar(np.array([piv + d * 405.0]))
+        cv.create_line(cx + a2[0] * s, cz - c2[0] * s,
+                       cx + a1[0] * s, cz - c1[0] * s,
+                       fill="#f85149", width=7)
+        cv.create_oval(cx + a0[0] * s - 4, cz - c0[0] * s - 4,
+                       cx + a0[0] * s + 4, cz - c0[0] * s + 4,
+                       fill=COL_ACENTO, outline="")
 
         # hélices detalladas: tobera + buje + 3 palas rellenas que giran
         c = (self.link.aplicado if self.link
