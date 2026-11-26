@@ -66,6 +66,7 @@ SubControl/
 ├── companero_carga.py       # Script para la Pi: indicador de carga con las luces
 ├── requirements.txt         # Dependencias
 ├── build.bat                # Compila el .exe (lo deja en la raíz del proyecto)
+├── dependencias.bat         # ⚙️ Instala / desinstala / verifica los requerimientos
 ├── MANUAL_DE_CONTROL.md     # 📖 Manual de uso completo
 ├── MONTAJE.md               # 🔧 Manual de construcción fase por fase
 ├── COMPONENTES.md           # 🔩 Lista de materiales con precios (~1.230 USD)
